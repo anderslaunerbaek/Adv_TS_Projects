@@ -1,6 +1,5 @@
 ## Make a simple ldf(x,lags)
-ldf <- function(x,lags,nBoot=30,plotIt=TRUE,plotFits=FALSE)
-{  
+ldf <- function(x, lags, nBoot = 30, plotIt = TRUE, plotFits = FALSE) {  
   ## Calculate Lag Dependence Functions
   ## by local 2-order polynomial regression with the loess() function,
   ## and leave one out to find the best bandwidth. Finally an approximate

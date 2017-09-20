@@ -7,7 +7,9 @@
 ## Number of intervals 
 n.bin <- 20
 ## The breaks between the intervals 
-breaks <- seq(-2,2,len=n.bin+1)
+breaks <- seq(-2, 2, len = n.bin + 1)
+
+
 ## Initialize
 h <- diff(breaks)[1]
 lambda <- gamma <- f.hat <- h.hat <- numeric(n.bin)

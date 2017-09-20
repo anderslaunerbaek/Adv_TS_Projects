@@ -1,13 +1,543 @@
 ---
-title: "Advanced Time Series Analysis: "
+title: 'Advanced Time Series Analysis: '
 author: "Anders Launer Bæk (s160159)"
 date: "20/8/2017"
-output: pdf_document
+output:
+  pdf_document: default
 ---
 
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      fig.width = 8, fig.height = 4,
+                      fig.show='hold', fig.align='center',
+                      eval = TRUE, 
+                      tidy = TRUE, 
+                      dev = 'pdf', 
+                      cache = TRUE, fig.pos = "th!")
+
+kable_format <- list(small.mark = ",",
+                     big.mark = ',',
+                     decimal.mark = '.',
+                     nsmall = 3,
+                     digits = 3,
+                     scientific = FALSE,
+                     big.interval = 3L)
+
+library(ggplot2)
+theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(panel.background = element_blank(), 
+          panel.border = element_blank(),
+          panel.grid = element_blank(),
+          axis.text = element_text(size = base_size, face = face, family = base_family),
+          axis.title = element_text(size = base_size, face = face, family = base_family),
+          legend.text = element_text(size = base_size, face = face, family = base_family))
+}
+
+fig <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            paste("Figure ", i, ": ", text, sep="")
+        },
+        ref=function(refName) {
+            ref[[refName]]
+        })
+})
+tab <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            paste("Table ", i, ": ", text, sep="")
+        },
+        ref=function(refName) {
+            ref[[refName]]
+        })
+})
+
+library(rgl)
 ```
 
-## R Markdown
+# Part 1
+## Generate data
+```{r, fig.cap=fig$cap("ex_1", "")}
+
+# n = 1000
+# data <- data.frame(x = 1:n,
+#                    y = 1 / (1 + exp(-seq(-5, 5, length.out = n))))
+#
+# # add noise
+# data$y <- data$y + rnorm(n) * 0.05
+
+
+## Number of samplepoints
+n <- 1000
+## Uniform distributed x
+x <- runif(n,-1,1)
+## Errors
+r <- rnorm(n)
+data <- data.frame(t = 1:n, x = x, noise = r)
+
+ggplot(data) +
+  #geom_point(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+  geom_line(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "t (time)", y = "y(t)", color = "") + 
+  theme_TS()
+
+
+```
+
+ her bliver der skrevet en masse text
+ figure `r fig$ref("ex_1")`
+ 
+## SETAR(2,1,1)
+```{r, fig.cap=fig$cap("ex_2", "")}
+## Make a time series y with a regime model
+data$y_SETAR <- rep(NA,n)
+data$y_SETAR[1] <- data$noise[1]
+for(t in 2:n) {
+  if(data$y_SETAR[t - 1] <= 0) {
+    data$y_SETAR[t] <- 1.0 + 0.6 * data$y_SETAR[t-1] + data$noise[t]
+  } else {
+    data$y_SETAR[t] <- -1.0 + 0.4 * data$y_SETAR[t-1] + data$noise[t]
+  }
+}
+
+# 
+data$y_SETAR_1 <- rep(NA, n)
+data$y_SETAR_1[2:n] <- data$y_SETAR[1:(n-1)]
+# plot data
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+
+```
+
+## IGAR(2,1)
+```{r, fig.cap=fig$cap("ex_3", "")}
+## Make a time series y with a regime model
+y_IGAR <- rep(NA,n)
+y_IGAR[1] <- data$noise[1]
+
+# simulate probability for regime shift
+data$p <- runif(n)
+for(t in 2:n) {
+  #
+  if(data$p[t] <= 0.50) {
+    y_IGAR[t] <- 1.0 + 0.6 * y_IGAR[t - 1] + data$noise[t]
+  } else {
+    y_IGAR[t] <- -1.0 + 0.4 * y_IGAR[t - 1] + data$noise[t]
+  }
+}
+
+# 
+data$y_IGAR <- y_IGAR
+data$y_IGAR_1 <- rep(NA, n)
+data$y_IGAR_1[2:n] <- data$y_IGAR[1:(n-1)]
+
+# plot data
+ggplot(data) +
+  #geom_point(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+  geom_point(aes(x = y_IGAR_1, y = y_IGAR, color = "IGAR(2,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+
+```
+
+
+
+## MMAR(2,1)
+```{r, fig.cap=fig$cap("ex_4", "")}
+# transition parameters
+P <- matrix(data = c(0.95,0.05, 0.05,0.95), nrow = 2, ncol = 2)
+
+# there are two regimes
+jt <- rep(NA,n)
+
+# init first t in stage 1
+jt[1] <- 1
+
+for (t in 2:n) {
+  data$p[t] <- runif(1)
+  if (jt[t - 1] == 1) {
+    # jt - 1 is 2
+    if (p[t] <= P[1,1]) {
+      # first regime
+      jt[t] <- 1
+      } else { jt[t] <- 2 }
+  } else {
+    # jt - 1 is 2 
+    if (p[t] <= P[2,2]) {
+       # first regime
+       jt[t] <- 2
+       } else { jt[t] <- 1 }
+  }
+}
+
+data$jt <- jt
+
+
+
+## Make a time series y with a regime model
+y_MMAR <- rep(NA,n)
+y_MMAR[1] <- data$noise[1]
+for(t in 2:n) {
+  if(data$jt[t - 1] == 1) {
+    y_MMAR[t] <- 1.0 + 0.6 * y_MMAR[t - 1] + data$noise[t]
+  } else {
+    y_MMAR[t] <- -1.0 + 0.4 * y_MMAR[t - 1] + data$noise[t]
+  }
+}
+
+# 
+data$y_MMAR <- y_MMAR
+
+data$y_MMAR_1 <- rep(NA, n)
+data$y_MMAR_1[2:n] <- data$y_MMAR[1:(n-1)]
+
+# plot data
+ggplot(data) +
+  #geom_point(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+  #geom_line(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+  geom_point(aes(x = y_MMAR_1, y = y_MMAR, color = "MMAR(2,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+
+```
+
+
+
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r tab.cap=tab$cap("ex_1", "Here you see some interesting stuff about cars and such.")}
+
+knitr::kable(head(data, 5))
+
+
+```
+ 
+figure `r tab$ref("ex_1")`
+
+
+
+
+
+
+# Part 2
+
+Using the SETAR model from part 1
+
+## SETAR(2,1,1)
+```{r, fig.cap=fig$cap("ex_5", "")}
+## Make a time series y with a regime model
+data$mean_theo <- rep(NA,n)
+data$mean_theo[1] <- 0
+for(t in 2:n) {
+  if(data$y_SETAR[t - 1 ] <= 0) {
+    data$mean_theo[t] <- 1.0 + 0.6 * data$y_SETAR[t - 1]
+  } else {
+    data$mean_theo[t] <- -1.0 + 0.4 * data$y_SETAR[t - 1]
+  }
+}
+
+#
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "s(2,1,1)"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "mean(2,1,1)"), alpha = 1/2) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") +
+  theme_TS()
+
+```
+
+
+adasd 
+
+```{r, fig.cap=fig$cap("ex_6", "")}
+#
+data$mean_pred_fit <- rep(NA, n)
+bandwidth <- 0.1
+#
+data$mean_pred_fit[2:n] <- loess(y_SETAR ~ y_SETAR_1, 
+                                 dat = data[2:n, ], 
+                                 span = bandwidth)$fitted
+
+
+
+# data$mean_pred_fit[2:n] <- lm(y_SETAR ~ y_SETAR_1, 
+#                                  dat = data[2:n, ], 
+#                                  span = bandwidth)$fitted
+
+#
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = mean_pred_fit, color = "mean_hat(2,1,1)"), alpha = 1/2) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+```
+comment on the bandwith
+
+
+use KNN to get better boundaries points
+
+# Part 3
+
+
+```{r, fig.cap=fig$cap("ex_7", "")}
+
+## Parameters for the histogram regression
+## Number of intervals 
+n.bin <- 100
+## The breaks between the intervals 
+breaks <- seq(min(data$y_SETAR_1, na.rm = TRUE), 
+              max(data$y_SETAR_1, na.rm = TRUE), 
+              len = n.bin + 1)
+# ## Initialize
+# h <- diff(breaks)[1]
+# lambda <- gamma <- f.hat <- h.hat <- numeric(n.bin)
+##----------------------------------------------------------------
+## Cut into intervals conditioned on x_{t-1}
+L <- split(data$y_SETAR, cut(data$y_SETAR_1, breaks))
+## Check if there are at least 5 points in each interval
+# if (!all(sapply(L, length) >= 5)){ 
+#   print('Stopped: There are less than 5 points in one of the intervals')
+#   break
+# }
+while(!all(sapply(L, length) >= 5)) {
+  #
+  n.bin <- n.bin - 1
+  ## The breaks between the intervals 
+  breaks <- seq(min(data$y_SETAR_1, na.rm = TRUE), max(data$y_SETAR_1, na.rm = TRUE), len = n.bin + 1)
+  ## Cut into intervals conditioned on x_{t-1}
+  L <- split(data$y_SETAR, cut(data$y_SETAR_1, breaks))
+}
+
+## Initialize
+h <- diff(breaks)[1]
+lambda <- gamma <- f.hat <- h.hat <- numeric(n.bin)
+
+
+## Calc the hist regressogram, i.e. for each interval
+for(i in 1:n.bin) {
+    x.bin <- L[[i]]
+    lambda[i] <- mean(x.bin)
+    f.hat[i] <- (n.bin * h)^(-1) * length(x.bin)
+    gamma[i] <- sum((x.bin - lambda[i])^2) / length(x.bin)
+  }
+# ## Make confidence bands for the cumulated function. Def. (3.10).
+# ## 95% confidence band, c is found in table 3.1
+# c.alpha <- 1.273
+# ##
+Lambda <- cumsum(lambda * h)
+# for (i in 1:n.bin) {
+#   h.hat[i] <- gamma[i]/f.hat[i];
+# }
+# H.hat <- cumsum(h.hat*h);
+# ##
+# H.hat.b <- H.hat[n.bin];
+# Lambda.lower <- Lambda - c.alpha * n.bin^(-0.5) * H.hat.b^(0.5) * (1 + H.hat/H.hat.b);
+# Lambda.upper <- Lambda + c.alpha * n.bin^(-0.5) * H.hat.b^(0.5) * (1 + H.hat/H.hat.b);
+
+
+#
+confi <- data.frame(breaks = (breaks + h/2)[-length(breaks)], 
+                    #lower = Lambda.lower, 
+                    #upper = Lambda.upper,
+                    cum_con_mean = Lambda) 
+
+
+# #
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "mean_theo(2,1,1)"), alpha = 1/2) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") +
+  theme_TS() +
+  #geom_line(data = confi, aes(x = breaks, y = upper, color = "upper CI"), alpha = 1/2) +
+  #geom_line(data = confi, aes(x = breaks, y = lower, color = "lower CI"), alpha = 1/2) +
+  geom_point(data = confi, aes(x = breaks, y = cum_con_mean, color = "mean_cum_con CI"), alpha = 1)
+```
+and compare with the theoretical cumulative conditional mean.
+
+# Part 4
+
+describe the function
+
+```{r, fig.cap=fig$cap("ex_8", "")}
+## Number of samplepoints
+n <- 3000
+## Uniform distributed x
+x <- runif(n,-1,1)
+## Errors
+r <- rnorm(n) / 10
+data_4 <- data.frame(t = 1:n, x = x, noise = r, y = rep(NA, n))
+
+data_4$x_1 <- rep(NA, n)
+data_4$x_1[2:n] <- data_4$x[1:(n-1)]
+
+# define continuously differentiable function
+g <- function(x) {
+  #
+  return(1 / (1 + exp(-x))) 
+  #return(x * x) 
+}
+#
+data_4$y[1] <- mu <- data_4$noise[1]
+#
+for (t in 2:n) {
+  #
+  data_4$y[t] <- mu + g(data_4$x[t - 1]) * data_4$y[t - 1] + data_4$noise[t]
+}
+#
+data_4$y_1 <- rep(NA, n)
+data_4$y_1[2:n] <- data_4$y[1:(n-1)]
+
+# ggplot(data_4) +
+#   geom_line(aes(x = y_1, y = y, color = "y"), alpha = 1/2) +
+#   labs(x = "y(t - 1)", y = "y(t)", color = "") +
+#   theme_TS()
+```
+Use these simulated valuues to estimate the dependence of yt on xt 1 and yt 1 using the method of local regression. below 
+```{r, fig.cap=fig$cap("ex_9", "")}
+
+##------------------------------------------------
+## Estimate the function with local polynomial regression using lm()
+## It is possible to use different bandwidths in each dimension.
+
+data_4 <- data_4[-1, ]
+
+
+## Epanechnikov kernel
+kernelEp <- function(xall, x, h) {
+  ## Make the weights with an Epanechnikov kernel
+  ## h has the same unit as x (i.e. it is on the same absolute scale, so if x is Watt, h is also given in Watt) 
+  u <- abs(xall - x)
+  u <- u / h
+  w <- 3/4 * (1 - u^2)
+  ## Set values with |u|>1 to 0
+  w[abs(u) > 1] <- 0
+  return(w)
+}
+
+## Bandwidths in each two-dimensional multiplicative kernel relative to the range of x and y
+bandwidth <- 0.3 
+hx <- bandwidth * (max(data_4$x_1, na.rm = TRUE) - min(data_4$x_1, na.rm = TRUE))
+hy <- bandwidth * (max(data_4$y_1, na.rm = TRUE) - min(data_4$y_1, na.rm = TRUE))
+
+
+nplot <- 100
+x1Seq <- seq(min(data_4$x), max(data_4$x), len = nplot)
+y1Seq <- seq(min(data_4$y), max(data_4$y), len = nplot)
+
+open3d() ## Note: Do not use rgl.open()
+points3d(data_4$x_1, data_4$y_1, data_4$y, size=3, col="red")
+aspect3d(c(1,1,1))
+axes3d()
+title3d(xlab = "x[t-1]", ylab = "y[t-1]", zlab = "y[t]")
+
+
+## Do local 1'st order regression. This can also easily be changed to a conditional parametric model
+yprd <- outer(x1Seq, y1Seq, function(x1,y1) {
+  L <- lapply(1:length(x1), function(i) {
+    ## Just a tip for debugging in R: Use browser() to stop inside some function. Quit with "Q", see ?browser
+    ##browser()
+    ## Calculate the weights in each dimension
+    wx <- kernelEp(data_4$x_1, x1[i], h = hx)
+    wy <- kernelEp(data_4$y_1, y1[i], h = hy)
+    w <- wx * wy
+    ## Do it only with positive weights
+    ok <- w > 0
+    ## Note that this is local first order polynomial regression, but can easily be made 2'nd
+    fit <- lm(y ~ x_1 + y_1, weights=w[ok], dat=data_4[ok,])
+    return(predict(fit, data.frame(x_1=x1[i], y_1=y1[i])))
+  })
+  return(do.call("rbind",L))
+})
+## Draw the surface. See ?rgl.material for options
+surface3d(x1Seq, y1Seq, yprd, color="blue", alpha=0.5)
+
+
+# ggplot(data_4) +
+#   geom_line(aes(x = y_1, y = y, color = "y"), alpha = 1/2) +
+#   labs(x = "y(t - 1)", y = "y(t)", color = "") +
+#   theme_TS()
+```
+```{r, fig.cap=fig$cap("ex_10", "")}
+
+```
+
+# Part 5
+```{r, fig.cap=fig$cap("ex_11", "")}
+## Make a time series y with a regime model
+data_5 <- subset(data, select = c("t", "x", "noise"))
+n <- nrow(data_5)
+
+
+data_5$y_SETAR <- rep(NA,n)
+data_5$y_SETAR[1] <- data_5$noise[1]
+for(t in 2:n) {
+  if(data_5$y_SETAR[t - 1] <= 0) {
+    data_5$y_SETAR[t] <- 1.0 + 0.6 * data_5$y_SETAR[t-1] + data_5$noise[t]
+  } else {
+    data_5$y_SETAR[t] <- -1.0 - 0.4 * data_5$y_SETAR[t-1] + data_5$noise[t]
+  }
+}
+
+# 
+data_5$y_SETAR_1 <- rep(NA, n)
+data_5$y_SETAR_1[2:n] <- data_5$y_SETAR[1:(n-1)]
+# plot data
+ggplot(data_5) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+
+```
