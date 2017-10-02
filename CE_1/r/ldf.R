@@ -14,16 +14,16 @@ ldf <- function(x, lags, nBoot = 30, plotIt = TRUE, plotFits = FALSE, confidence
   ## The result is kept in val
   val <- vector()
   ##
-  for(i in 1:length(lags))
-  {
+  for (i in 1:length(lags)) {
     ## Take the k
     k <- lags[i]
     ## print text
-    print(paste("Calculating ldf no. ",i," of ",length(lags), sep=""))
+    # print(paste("Calculating ldf no.", i, "of", length(lags)))
+    message(paste("Calculating ldf no.", i, "of", length(lags)))
     ## Dataframe for modelling: xk is lagged k steps
     D <- data.frame(x=x[-(1:k)],xk=x[-((length(x)-k+1):length(x))])
     ## Leave one out optimization of the bandwidth with loess
-    RSSk <- leaveOneOut(D,plotFits)
+    RSSk <- leaveOneOut(D, plotFits)
     ## Calculate the ldf
     RSS <- sum((D$x - mean(D$x))^2)
     val[i] <- (RSS - RSSk) / RSS
@@ -33,15 +33,17 @@ ldf <- function(x, lags, nBoot = 30, plotIt = TRUE, plotFits = FALSE, confidence
   iidVal <- vector()
   for (i in 1:nBoot) {
     ## Print to entertain the modeller ;-)
-    print(paste("Calculating bootstrap no. ",i," of ",nBoot, sep=""))
+    # print(paste("Calculating bootstrap no.", i, "of", nBoot))
+    message(paste("Calculating bootstrap no.", i, "of", nBoot))
     ## Bootstrapping to make a confidence band
-    xr <- sample(x, min(length(x),100) ,replace=TRUE)
+    xr <- sample(x, min(length(x), 100), replace = TRUE)
     ## Dataframe for modelling
-    DR <- data.frame(x=xr[-1],xk=xr[-length(xr)])
+    DR <- data.frame(x = xr[-1],
+                     xk = xr[-length(xr)])
     RSSk <- leaveOneOut(DR)
     ## The ldf is then calculated
     RSS <- sum((DR$x - mean(DR$x))^2)
-    (iidVal[i] <- (RSS - RSSk) / RSS)
+    iidVal[i] <- (RSS - RSSk) / RSS
   }
   
   ## Plot the ldf

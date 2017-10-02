@@ -1,0 +1,144 @@
+---
+title: 'Advanced Time Series Analysis: Computer Exercise 2'
+author: "Anders Launer Bæk (s160159)"
+date: "20/8/2017"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      fig.width = 8, fig.height = 4,
+                      fig.show='hold', fig.align='center',
+                      eval = TRUE, 
+                      tidy = TRUE, 
+                      dev = 'pdf', 
+                      cache = TRUE, fig.pos = "th!")
+
+kable_format <- list(small.mark = ",",
+                     big.mark = ',',
+                     decimal.mark = '.',
+                     nsmall = 3,
+                     digits = 3,
+                     scientific = FALSE,
+                     big.interval = 3L)
+
+library(ggplot2)
+theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(panel.background = element_blank(), 
+          panel.border = element_blank(),
+          panel.grid = element_blank(),
+          axis.text = element_text(size = base_size, face = face, family = base_family),
+          axis.title = element_text(size = base_size, face = face, family = base_family),
+          legend.text = element_text(size = base_size, face = face, family = base_family))
+}
+
+fig <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            #paste("Figure ", i, ": ", text, sep="")
+            paste(text, sep="")
+        },
+        ref=function(refName) {
+            ref[[refName]]
+        })
+})
+# tab <- local({
+#     i <- 0
+#     ref <- list()
+#     list(
+#         cap=function(refName, text) {
+#             i <<- i + 1
+#             ref[[refName]] <<- i
+#             paste("Table ", i, ": ", text, sep="")
+#         },
+#         ref=function(refName) {
+#             ref[[refName]]
+#         })
+# })
+
+library(rgl)
+```
+
+# Part 1
+## Generate data
+
+\begin{equation}
+sa
+\label{eq_1_1}
+\end{equation}
+
+```{r, ex_1, fig.cap=""}
+## Number of samplepoints
+n <- 1000
+## Uniform distributed x
+x <- runif(n,-1,1)
+## Errors
+r <- rnorm(n)
+data <- data.frame(t = 1:n, x = x, noise = r)
+
+# ggplot(data) +
+#   #geom_point(aes(x = t, y = x, color = "Data"), alpha = 1/2) +
+#   geom_point(aes(x = t, y = x * noise, color = "Data with noise"), alpha = 1/2) +
+#   #ylim(0, 1) +
+#   labs(x = "t (time)", y = "y(t)", color = "") + 
+#   theme_TS()
+```
+
+ her bliver der skrevet en masse text
+ figure `r fig$ref("ex_1")`
+ 
+## SETAR(2,1,1)
+
+
+\begin{equation}
+a_0 = [2.0, -1.0]
+\label{eq_1_2a}
+\end{equation}
+\begin{equation}
+a_1 = [0.6, -0.4]
+\label{eq_1_2b}
+\end{equation}
+
+
+\begin{equation}
+sa
+\label{eq_1_3}
+\end{equation}
+```{r, fig.cap=fig$cap("ex_2", "")}
+
+# define parameter
+a0 <- c(2.0, -1.0) # off set
+a1 <- c(0.6, -0.4) # slope
+
+
+## Make a time series y with a regime model
+data$y_SETAR <- rep(NA,n)
+data$y_SETAR[1] <- data$noise[1]
+for(t in 2:n) {
+  if(data$y_SETAR[t - 1] <= 0) {
+    data$y_SETAR[t] <- a0[1] + a1[1] * data$y_SETAR[t-1] + data$noise[t]
+  } else {
+    data$y_SETAR[t] <- a0[2] + a1[2] * data$y_SETAR[t-1] + data$noise[t]
+  }
+}
+
+# 
+data$y_SETAR_1 <- rep(NA, n)
+data$y_SETAR_1[2:n] <- data$y_SETAR[1:(n-1)]
+# plot data
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") + 
+  theme_TS()
+
+```
+
