@@ -6,8 +6,6 @@ output:
   pdf_document: default
 ---
 
-
-
 ```{r setup, include=FALSE}
 rm(list = ls())
 
@@ -71,10 +69,8 @@ fig <- local({
 
 library(rgl)
 ```
-
 ## Part 1
-There is generated $n=1000$ noise samples from a $x \sim \mathcal{N}(0,\,1)$ which is used in all simulation in part one. 
-
+There is generated $n=1000$ noise samples from a $x \sim \mathcal{N}(0,\,1)$ which is used as the noise input for `t` in all simulations in part one. 
 
 ```{r, fig.cap="\\label{fig_ex_1}Plot of sampled noise."}
 ## Number of samplepoints
@@ -99,7 +95,7 @@ a_0 = [2.0, -1.0]
 \label{eq_1_2a}
 \end{equation}
 \begin{equation}
-a_1 = [0.6, -0.4]
+a_1 = [0.6, -0.9]
 \label{eq_1_2b}
 \end{equation}
 
@@ -108,7 +104,7 @@ a_{02} = [3.0, -2.0]
 \label{eq_12_2a}
 \end{equation}
 \begin{equation}
-a_{12} = [-0.6, 0.4]
+a_{12} = [-0.6, 0.9]
 \label{eq_12_2b}
 \end{equation}
 
@@ -128,17 +124,17 @@ X_t = \left\{ \begin{matrix} a_{0,1} + a_{1,1} X_{t- 1} + \epsilon_t & for & X_{
 \label{eq_1_SETAR_r}
 \end{equation}
 
-The model (eq. \ref{eq_1_SETAR_r}) have been simulated with two different set of parameters (eq. \ref{eq_1_2a} - eq. \ref{eq_12_2b}) and their processes are plotted in fig. \ref{fig_ex_2}. 
+The model $X_t$ (eq. \ref{eq_1_SETAR_r}) has been simulated with two different set of parameters (eq. \ref{eq_1_2a} - eq. \ref{eq_12_2b}) and its simulations are plotted in fig. \ref{fig_ex_2}. 
 
 
 ```{r, fig.cap="\\label{fig_ex_2}Two simulated SETAR(2,1,1) models using $par_1$ and $par_2$."}
 
 # define parameter
 a0 <- c(2.0, -1.0) # off set
-a1 <- c(0.6, -0.4) # slope
+a1 <- c(0.6, -0.9) # slope
 
 a0_2 <- c(3.0, -2.0) # off set
-a1_2 <- c(-0.6, 0.4) # slope
+a1_2 <- c(-0.6, 0.9) # slope
 
 ## Make a time series y with a regime model
 data$y_SETAR <- rep(NA,n)
@@ -160,7 +156,6 @@ for(t in 2:n) {
   } else {
     data$y_SETAR_d[t] <- a0_2[2] + a1_2[2] * data$y_SETAR_d[t-1] + data$noise[t]
   }
-  
 }
 
 #
@@ -177,17 +172,14 @@ ggplot(data) +
   #ylim(0, 1) +
   labs(x = "y(t - 1)", y = "y(t)", color = "") +
   theme_TS()
-
 ```
 
 Fig. \ref{fig_ex_2} shows the plot of the SETAR(2,1,1) model with the two different parameter sets. 
 \begin{itemize}
 \item For both model it is possible to differentiate between the regimes and their transitions.
-\item It is also possible to see the inverse properties of the two model defined by the slope. 
+\item It is also possible to see the inverse properties of the slop for the two models.
 \item Both models are using different offsets where the transition are most separated in the model which is using $par_2$.
 \end{itemize}
-
-
 
 ### IGAR(2,1)
 The IGAR model are given by the same equation as the SETAR model (eq. \ref{eq_1_SETAR}) but using an external parameter to switch between regimes.
@@ -219,14 +211,12 @@ for(t in 2:n) {
   } else {
     data$y_IGAR[t] <- a0[2] + a1[2] * data$y_IGAR[t - 1] + data$noise[t]
   }
-  
-  
+  # 
   if(data$p[t] <= 0.50) {
     data$y_IGAR_d[t] <- a0_2[1] + a1_2[1] * data$y_IGAR_d[t - 1] + data$noise[t]
   } else {
     data$y_IGAR_d[t] <- a0_2[2] + a1_2[2] * data$y_IGAR_d[t - 1] + data$noise[t]
   }
-  
 }
 
 # 
@@ -248,7 +238,7 @@ ggplot(data) +
 
 Fig. \ref{fig_ex_3} shows the plot of the IGAR(2,1) model with the two different parameter sets. 
 \begin{itemize}
-\item Different from the SETAR model the IGAR model using a given external parameter to switch between regimes. In this case there have been sampled a random number between $[0,1]$. 
+\item The IGAR model using a given external parameter to switch between regimes which is different from the SETAR model. In this case there have been sampled a random uniform distributed number between $[0,1]$. 
 \item The shift threshold is $0.5$ (eq. \ref{eq_1_IGAR_r}) which supports the distribution of the data points in fig. \ref{fig_ex_3}. The data point are more less equally distributed in both regimes for both IGAR models.
 \end{itemize}
 
@@ -315,13 +305,15 @@ Fig. \ref{fig_ex_4} shows the plot of the MMAR(2,1) model with the two different
 \begin{itemize}
 \item $P$ is useful for setting different thresholds for shifting between regimes.
 \item The diagonal in $P$ is, in this case, determine external parameter for being this the current regime. The off-diagonal are external parameter for shifting to a new regime.
+\item The external parameter is the same random smapled uniform distributed parameter from the IGAR(2,1) model.
+\item It is possible to see a larger disburtion in the "lines" compared to the IGAR(2,1) model. This is due to the transistion matrix and because the model will be in the same regime for longer periods. 
 \end{itemize}
 
 
 ### Common for above models
 \begin{itemize}
-\item The main difference between the three models are the properties for shifting to a new regime. The shift in the SETAR model depends on the previous value of the model and some predefined regimes and the IGAR model and the MMAR model shifts with respect to an external parameter.
-\item The main difference between the IGAR model and the MMAR model is that it is possible to determine different thresholds for shifting between given regimes. Maybe there are some physical properties which make the transition from a given stage to another given stage.
+\item The main difference between the three models are the properties for shifting to a new regime. The shift in the SETAR model depends on the previous value of the model. And the shifting in the IGAR model and in the MMAR model is activated by an external parameter.
+\item The main difference between the IGAR model and the MMAR model is that it is possible to determine different thresholds for shifting between deffirent regimes. Hereby it is possible to model "logic" transistions between stages.
 \end{itemize}
 
 \newpage
@@ -330,13 +322,13 @@ Fig. \ref{fig_ex_4} shows the plot of the MMAR(2,1) model with the two different
 Using the same SETAR model with $par_1$ from part 1, eq. \ref{eq_1_SETAR_r}. 
 
 ### Compute the theoretical mean
-The theoretical mean, eq. \ref{eq_2_theo_mu}
+The theoretical mean, is given by eq. \ref{eq_2_theo_mu}.
 
 \begin{equation}
 M(x) = E\left\{  X_{t + 1} |X_t = x\right\} 
 \label{eq_2_theo_mu}
 \end{equation}
-By the fact that the noise are Gaussian distributed, $\epsilon _{ t } =0$ it is possible to rewrite the SETAR(2,1,1) model (eq. \ref{eq_1_SETAR_r}) to the theoretical mean in eq. \ref{eq_2_theo_mu_r}
+By the fact that the noise are Gaussian distributed, then $\epsilon _{ t } =0$ must be true and it is possible to rewrite the SETAR(2,1,1) model (eq. \ref{eq_1_SETAR_r}) to the theoretical mean in eq. \ref{eq_2_theo_mu_r}.
 
 \begin{equation}
 M_{ t}=\left\{ \begin{matrix} a_{ 0,1 }+a_{ 1,1 }X_{ t -1} & for & X_{ t-1 }\leq 0 \\ a_{ 0,2 }+a_{ 1,2 }X_{ t-1}& for & X_{ t-1 }>0 \end{matrix} \right\} 
@@ -359,13 +351,13 @@ for(t in 2:n) {
 #
 ggplot(data) +
   geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1), par_1"), alpha = 1/2) +
-  geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "M_t"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "M_t_theo"), alpha = 1/2) +
   labs(x = "y(t - 1)", y = "y(t)", color = "") +
   theme_TS()
 
 ```
 
-Fig. \ref{fig_ex_5} shows the plot of the theoretical mean with two. I do not have any comments to this plot.
+Fig. \ref{fig_ex_5} shows the plot of the theoretical mean ($M(x)$) for the parameters set one.  The plot looks as expected and I do not have any further comments.
 
 
 ###  Estimate the mean
@@ -373,7 +365,7 @@ Fig. \ref{fig_ex_5} shows the plot of the theoretical mean with two. I do not ha
 I have chosen to use the native function `lm()` have been used to estimate the mean of the SETAR(2,1,1) model with two selected bandwidths, $bw_n = (0.2, 0.7)$. 
 `lm()` is set to use a local second order polynomial regression.
 
-The `lm()` uses the bandwidth restricts number of samples to include to each fit $idx =as.integer(bw_n*n)$. Besides the bandwidth each fit also uses weigths from the Epanechnikov kernel (function from sample code).
+The `lm()` uses the the weigths from the Epanechnikov kernel (function from sample code) to do the local estimate for the given bandwidth.
 
 ```{r, fig.cap="\\label{fig_ex_6}Plots of the estimated mean with different bandwidths."}
 #
@@ -420,11 +412,13 @@ select_idx <- function(low_b = 2, up_b = n, bw_knn = bw_knn, cur_idx){
   #
   return(seq_)
 }
+
+
 # loop----
 j <- 1
 for (ii in col_idx) {
   ## Bandwidth
-  bw_knn <- as.integer(bw[j] * n)
+  # bw_knn <- as.integer(bw[j] * n)
   
   # knn in space  
   # idx_knn <- select_idx_knn(df = subset(data,
@@ -432,19 +426,26 @@ for (ii in col_idx) {
   #                                       subset = 1:n %in% 2:n),
   #                           K = bw_knn)
   
+    idx <- 2:n
+    
+    hy <- bw[j] * (max(data$y_SETAR_1[idx], na.rm = T) - 
+                     min(data$y_SETAR_1[idx], na.rm = T))
+    hx <- bw[j] * (max(data$y_SETAR[idx], na.rm = T) - 
+                     min(data$y_SETAR[idx], na.rm = T))
+  
   ## Do local 1'st order regression.
   for (i in 2:n) {
     ## Calculate the weights
     
     
     # idx <- idx_knn[i - 1 , ]
-    idx <- select_idx(low_b = 2, up_b = n, bw_knn = bw_knn, cur_idx = i)
+    #idx <- select_idx(low_b = 2, up_b = n, bw_knn = bw_knn, cur_idx = i)
     # idx <- 2:n
-    
-    hy <- bw[j] * (max(data$y_SETAR_1[idx], na.rm = T) - 
-                     min(data$y_SETAR_1[idx], na.rm = T))
-    hx <- bw[j] * (max(data$y_SETAR[idx], na.rm = T) - 
-                     min(data$y_SETAR[idx], na.rm = T))
+    # 
+    # hy <- bw[j] * (max(data$y_SETAR_1[idx], na.rm = T) - 
+    #                  min(data$y_SETAR_1[idx], na.rm = T))
+    # hx <- bw[j] * (max(data$y_SETAR[idx], na.rm = T) - 
+    #                  min(data$y_SETAR[idx], na.rm = T))
     
     wx <- kernelEp(xall = data$y_SETAR_1[idx], x = data$y_SETAR_1[i], h = hx)
     wy <- kernelEp(xall = data$y_SETAR[idx], x = data$y_SETAR[i], h = hy)
@@ -487,33 +488,26 @@ ggplot(data) +
   theme_TS()
 ```
 
-Fig. \ref{fig_ex_6} shows the plot of the estimated mean with two different bandwidths.
+Fig. \ref{fig_ex_6} shows the plot of the estimated means with two different bandwidths.
 
 \begin{itemize}
 \item The conceptual interpretation of the bandwidth is a measure for how many samples which should be used in the local fit of the second order polynomial.
-\item A higher bandwidth will decrease the noise in the signal and vice versa. The high bandwidth makes estimated mean is less flexibel to regime shifts for the SETAR(2,1,1) model.
-\item A lower bandwidth is more suitable to estimate the mean value of the SETAR(2,1,1) model, due to the charaterica of its regimes.
-\item It is also posssible to obtain better estimation in the boundaries by using the lower bandwidth.
+\item A higher bandwidth will decrease the variance but increase the bias.
+\item A lower bandwidth will increase the variance but decrease the bias.
+\item The best selection of the bandwidth can be found be using cross validation (see. 2.3.6 in Literature) and evaluate the residuals with respect the nature of the problem. 
+\item If boundary estiamtion are essential for the problem then a lower bandwidth will perform best.
 \end{itemize}
 
 \newpage
 ## Part 3
-The `cumulativeMeans.R` script have been used to calculate the cumulative conditional means.
+The `cumulativeMeans.R` script have been used to calculate the cumulative conditional mean.
 
-The theoretical cumulative conditional means are determined by eq. \ref{eq_3_1}.
-\begin{equation}
-sd
-\label{eq_3_1}
-\end{equation}
+The estimated cumulative conditional mean is based on $X_t$ from eq. \ref{eq_1_SETAR_r} and the theoretical cumulative conditional maen is based on $M_t$ from eq. \ref{eq_2_theo_mu_r}.
 
-```{r, fig.cap="\\label{fig_ex_7}Plots of the theoretical cumulative conditional means and estimated cumulative conditional means."}
-
-
+```{r, fig.cap="\\label{fig_ex_7}Plot of the theoretical cumulative conditional mean, estimated cumulative conditional mean, the theoretical mean adn the SETAR(2,1,1) model."}
+#
 data$mean_theo_1 <- rep(NA, n)
 data$mean_theo_1[2:n] <- data$mean_theo[1:(n-1)]
-
-
-
 
 ## Parameters for the histogram regression
 ## Number of intervals 
@@ -522,27 +516,32 @@ n.bin <- 200
 breaks <- seq(min(data$y_SETAR_1, na.rm = TRUE), 
               max(data$y_SETAR_1, na.rm = TRUE), 
               len = n.bin + 1)
+breaks_theo <- seq(min(data$mean_theo_1, na.rm = TRUE), 
+              max(data$mean_theo_1, na.rm = TRUE), 
+              len = n.bin + 1)
 
 ## Cut into intervals conditioned on x_{t-1}
 L <- split(data$y_SETAR, cut(data$y_SETAR_1, breaks))
-while(!all(sapply(L, length) >= 5)) {
+L_theo <- split(data$mean_theo, cut(data$mean_theo_1, breaks_theo))
+  
+while(!all(sapply(L, length) >= 5) && !all(sapply(L_theo, length) >= 5)) {
   #
   n.bin <- n.bin - 1
   ## The breaks between the intervals 
   breaks <- seq(min(data$y_SETAR_1, na.rm = TRUE), 
                 max(data$y_SETAR_1, na.rm = TRUE), 
                 len = n.bin + 1)
+  breaks_theo <- seq(min(data$mean_theo_1, na.rm = TRUE), 
+                max(data$mean_theo_1, na.rm = TRUE), 
+                len = n.bin + 1)
   ## Cut into intervals conditioned on x_{t-1}
   L <- split(data$y_SETAR, cut(data$y_SETAR_1, breaks))
-  L_theo <- split(data$mean_theo, cut(data$mean_theo_1, breaks))
+  L_theo <- split(data$mean_theo, cut(data$mean_theo_1, breaks_theo))
 }
-
-
 
 ## Initialize
 h <- diff(breaks)[1]
 lambda_theo <- lambda <- gamma <- f.hat <- h.hat <- numeric(n.bin)
-
 
 ## Calc the hist regressogram, i.e. for each interval
 for(i in 1:n.bin) {
@@ -584,34 +583,33 @@ confi <- data.frame(breaks = (breaks + h/2)[-length(breaks)],
 # #
 ggplot(data) +
   geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
-  #geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "M_t"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = mean_theo, color = "M_t_theo"), alpha = 1/2) +
   labs(x = "y(t - 1)", y = "y(t)", color = "") +
   theme_TS() +
-  geom_line(data = confi, aes(x = breaks, y = cum_con_mean, color = "M_t_cum"), alpha = 1) +
+  geom_line(data = confi, aes(x = breaks, y = cum_con_mean, color = "M_t_cum_hat"), alpha = 1) +
   geom_line(data = confi, aes(x = breaks, y = cum_con_mean_theo, color = "M_t_cum_theo"), alpha = 1)
 ```
 
+It has been chosen to use the same number of bins in for the theoretical cumulative conditional mean and the estimated cumulative conditional mean. 
 
-Fig. \ref{fig_ex_7} shows the plot of the theoretical cumulative conditional means and the estimated cumulative conditional means.
+Fig. \ref{fig_ex_7} shows the plot of the theoretical cumulative conditional mean, the estimated cumulative conditional mean, the theoretical mean and the SETAR(2,1,1) model.
 \begin{itemize}
-\item 
+\item Due the data it was possible to seperate the data into `r n.bin` bins in order to satisfy the minimum of at least five observations in each bin.
+\item Common for both cumalutive conditinal means is the adaption to the regime shift. 
+\item Despite using the same number of bins in each of the cumulative conditional means, is it possible to see the different breakpoints/bin widths. This must be due to the distribution of the data. And as mentioned on page 70\footenote{Modelling Non-Linear and Non-Stationary Time Series}, the cumalutive conditional mean is sensitive to the change in bandwidth (bin width). 
 \end{itemize}
-
-
-
 
 \newpage
 ## Part 4
 
-describe the function
-
+The model we wish to identify is given in eq. \ref{eq_4_1}.
 
 \begin{equation}
 Y_t = \mu + g(X_{t-1}) Y_{t-1} + \epsilon_t
 \label{eq_4_1}
 \end{equation}
 
-where $X_t$ is the input and $Y_t$ is the output. I assume the input are more less constant and given by $\mathcal{U}(0.95,\,0.99)$. $g(x)$ is defined in eq. \ref{eq_4_2}.
+where $X_t$ is the input and $Y_t$ is the output. I assume the input are more less constant and given by $X_t = \mathcal{U}(0.95,\,0.99)$. $g(x)$ is defined in eq. \ref{eq_4_2}.
 \begin{equation}
 g(x) = 4x(1 - x)
 \label{eq_4_2}
@@ -642,7 +640,7 @@ data$model_4_in_1[2:n] <- data$model_4_in[1:(n-1)]
 # define continuously differentiable function
 g <- function(x) {
   # return(1 / (1 + exp(-x))) 
-  # return(x * x) 
+  #return(x * x) 
   return(4 * x * (1 - x)) 
 }
 
@@ -658,31 +656,33 @@ for (t in 2:n) {
 data$model_4_1 <- rep(NA, n)
 data$model_4_1[2:n] <- data$model_4[1:(n-1)]
 
-ggplot(data) +
-   geom_line(aes(x = model_4_in_1, y = model_4_1, color = "Y_t"), alpha = 1/2) +
-   labs(x = "X(t - 1)", y = "Y(t-1)", color = "") +
-   theme_TS()
+# ggplot(data) +
+#    geom_line(aes(x = model_4_in_1, y = model_4_1, color = "Y_t"), alpha = 1/2) +
+#    labs(x = "X(t - 1)", y = "Y(t-1)", color = "") +
+#    theme_TS()
 ```
 
 ### Parametric approch
+```{r}
+bw <- 0.1 
+```
 
-Use these simulated valuues to estimate the dependence of yt on xt 1 and yt 1 using the method of local regression. below 
+There has been simulated a process of eq. \ref{eq_4_1} and the dependence of $Y_t$ given $X_{t-1}$ and $Y_{t-1}$ will be discovered using local regression and a contour plot. 
+I have chosen to use the `lm()`  with the Epanechnikov kernel with the bandwidth is chosen to `r bw`. 
+I assume there is a local linear relation between $X_{t-1}$ and $Y_{t-1}$ there for the first order regression: `lm(Y_t ~ X_{t-1} + Y_{t-1}, weights=w[ok], data = data[ok, ])`. There will only be consdiered samples which have weigths greather than zero.
+
 ```{r, fig.cap="\\label{fig_ex_8}"}
-
-# 
-
+#
 if ( nrow(data) == 3000) {
   data <- data[-1, ]  
   n <- nrow(data)
 }
 
-
-
-
 ## Bandwidths in each two-dimensional multiplicative kernel relative to the range of x and y
-bw <- 0.4 
-bw_knn <- as.integer(bw * n)
-nplot <- 100
+hx <- bw * (max(data$model_4_1, na.rm = TRUE) - min(data$model_4_1, na.rm = TRUE))
+hy <- bw * (max(data$model_4, na.rm = TRUE) - min(data$model_4, na.rm = TRUE))
+# bw_knn <- as.integer(bw * n)
+nplot <- 400
 # 
 x1Seq <- seq(min(data$model_4_in), max(data$model_4_in), len = nplot)
 y1Seq <- seq(min(data$model_4), max(data$model_4), len = nplot)
@@ -697,21 +697,29 @@ y1Seq <- seq(min(data$model_4), max(data$model_4), len = nplot)
 yprd <- outer(x1Seq, y1Seq, function(x1,y1) {
   L <- lapply(1:length(x1), function(i) {
     
-    # idx <- 1:n
+    #idx <- 1:n
     
     # KNN
-    idx <- select_idx(low_b = 1, up_b = n, bw_knn = bw_knn, cur_idx = i)
+    # idx <- select_idx(low_b = 1, up_b = n, bw_knn = bw_knn, cur_idx = i)
     ## Calculate the weights in each dimension
-    hx <- bw * (max(data$model_4_1[idx], na.rm = TRUE) - min(data$model_4_1[idx], na.rm = TRUE))
-    hy <- bw * (max(data$model_4[idx], na.rm = TRUE) - min(data$model_4[idx], na.rm = TRUE))
+    #hx <- bw * (max(data$model_4_1[idx], na.rm = TRUE) - min(data$model_4_1[idx], na.rm = TRUE))
+    #hy <- bw * (max(data$model_4[idx], na.rm = TRUE) - min(data$model_4[idx], na.rm = TRUE))
     #
-    wx <- kernelEp(data$model_4_in_1[idx], x1[i], h = hx)
-    wy <- kernelEp(data$model_4_1[idx], y1[i], h = hy)
+    #wx <- kernelEp(data$model_4_in_1[idx], x1[i], h = hx)
+    #wy <- kernelEp(data$model_4_1[idx], y1[i], h = hy)
+
+    wx <- kernelEp(data$model_4_in_1, x1[i], h = hx)
+    wy <- kernelEp(data$model_4_1, y1[i], h = hy)
     w <- wx * wy
     ## Do it only with positive weights
     ok <- w > 0
     ## Note that this is local first order polynomial regression, but can easily be made 2'nd
-    fit <- lm(model_4 ~ model_4_in_1 + model_4_1, weights=w[ok], data = subset(data, subset = 1:n %in% idx)[ok, ])
+    fit <- lm(model_4 ~ model_4_in_1 + model_4_1, weights=w[ok], data = data[ok, ])
+    
+    #fit <- loess(model_4 ~ model_4_in_1 + model_4_1, weights=w[ok], 
+    #             data = data[ok, ], degree = 1, parametric = TRUE, nrow(data[ok, ])))
+    
+    
     return(predict(fit, data.frame(model_4_in_1 = x1[i], model_4_1 = y1[i])))
   })
   return(do.call("rbind",L))
@@ -719,36 +727,42 @@ yprd <- outer(x1Seq, y1Seq, function(x1,y1) {
 ## Draw the surface. See ?rgl.material for options
 # surface3d(x1Seq, y1Seq, yprd, color="blue", alpha=0.5)
 
-
-  
 mtrx.melt <- reshape2::melt(yprd, id.vars = c("X_t1", "Y_t1"), measure.vars = "Y_t")
 names(mtrx.melt) <- c("X_t1", "Y_t1", "Y_t")
 mtrx.melt$X_t1 <- x1Seq[mtrx.melt$X_t1]
 mtrx.melt$Y_t1 <- y1Seq[mtrx.melt$Y_t1]
 
-
 ggplot(mtrx.melt, aes(x = X_t1, y = Y_t1, z = Y_t)) +
   stat_contour(geom="polygon", aes(fill=..level..)) +
+  #scale_fill_gradient(low = "red", high = "blue") +
   labs(x = "X(t - 1)", y = "Y(t - 1)", color = "Y(t)") +
   theme_TS()
 ```
 
-
-Fig. \ref{fig_ex_8}
-
+Instead of the 3D visualisation I have chosen to visulise $Y_t$ as a function of $X_{t-1}$ and $Y_{t-1}$ in a contour plot. Fig. \ref{fig_ex_8}
+\begin{itemize}
+\item How is the relation?
+\end{itemize}
 
 ### Non-parametric approch
+
+I have used following function call in the non-parametric approach: `loess(Y_t ~ X_{t-1} + Y_{t-1}, span = bw, degree = 1, parametric = FALSE, data = data)`.
 
 ```{r, fig.cap="\\label{fig_ex_8_1}"}
 
 ## Do local 1'st order regression. This can also easily be changed to a conditional parametric model
+fit <- loess(model_4 ~ model_4_in_1 + model_4_1, span = bw, degree = 1, parametric = FALSE, 
+             data = data)
+
 yprd_non <- outer(x1Seq, y1Seq, function(x1,y1) {
   L <- lapply(1:length(x1), function(i) {
     
-    # idx <- 1:n
+    #w <- rep(1, length(x1))
+    
+    #idx <- select_idx(low_b = 1, up_b = length(x1), bw_knn = as.integer(length(x1) * bw), cur_idx = i)
     
     # KNN
-    idx <- select_idx(low_b = 1, up_b = n, bw_knn = bw_knn, cur_idx = i)
+    #idx <- select_idx(low_b = 1, up_b = n, bw_knn = bw_knn, cur_idx = i)
     ## Calculate the weights in each dimension
     # hx <- bw * (max(data$model_4_1[idx], na.rm = TRUE) - min(data$model_4_1[idx], na.rm = TRUE))
     # hy <- bw * (max(data$model_4[idx], na.rm = TRUE) - min(data$model_4[idx], na.rm = TRUE))
@@ -759,7 +773,13 @@ yprd_non <- outer(x1Seq, y1Seq, function(x1,y1) {
     # ## Do it only with positive weights
     # ok <- w > 0
     ## Note that this is local first order polynomial regression, but can easily be made 2'nd
-    fit <- lm(model_4 ~ model_4_in_1 + model_4_1, weights=NULL, data = subset(data, subset = 1:n %in% idx))
+    #fit <- lm(model_4 ~ model_4_in_1 + model_4_1, weights=NULL, data = subset(data, subset = 1:n %in% idx))
+  
+    #fit <- loess(model_4 ~ model_4_in_1 + model_4_1, span = bw, degree = 1, parametric = FALSE, 
+     #         data = data)
+    
+    #fit <- lm(model_4 ~ model_4_in_1 + model_4_1, weights = w[idx], 
+    #         data = subset(data, subset = 1:nplot %in% idx))
     return(predict(fit, data.frame(model_4_in_1 = x1[i], model_4_1 = y1[i])))
   })
   return(do.call("rbind",L))
@@ -769,20 +789,23 @@ yprd_non <- outer(x1Seq, y1Seq, function(x1,y1) {
 
 
   
-mtrx.melt <- reshape2::melt(yprd_non, id.vars = c("X_t1", "Y_t1"), measure.vars = "Y_t")
-names(mtrx.melt) <- c("X_t1", "Y_t1", "Y_t")
-mtrx.melt$X_t1 <- x1Seq[mtrx.melt$X_t1]
-mtrx.melt$Y_t1 <- y1Seq[mtrx.melt$Y_t1]
+mtrx.melt_non <- reshape2::melt(yprd_non, id.vars = c("X_t1", "Y_t1"), measure.vars = "Y_t")
+names(mtrx.melt_non) <- c("X_t1", "Y_t1", "Y_t")
+mtrx.melt_non$X_t1 <- x1Seq[mtrx.melt_non$X_t1]
+mtrx.melt_non$Y_t1 <- y1Seq[mtrx.melt_non$Y_t1]
 
-
-ggplot(mtrx.melt, aes(x = X_t1, y = Y_t1, z = Y_t)) +
+ggplot(mtrx.melt_non, aes(x = X_t1, y = Y_t1, z = Y_t)) +
   stat_contour(geom="polygon", aes(fill=..level..)) +
+  #scale_fill_gradient(low = "red", high = "blue") +
   labs(x = "X(t - 1)", y = "Y(t - 1)", color = "Y(t)") +
   theme_TS()
 ```
 
 
 Fig. \ref{fig_ex_8_1}
+\begin{itemize}
+\item How is the relation?
+\end{itemize}
 
 
 
@@ -791,22 +814,23 @@ Fig. \ref{fig_ex_8_1}
 
 Native function `acf()` is the tool for identification of the model order and measures the degree of linear dependency in the time series.
 
-I have tried to apply the `ACF()` on the SETAR(2,1,1) model from part one and it was clearly measure some deregee of linear dependency. I have therefore chosen the model from part 4 ($Y_t$ from eq. \ref{eq_4_1}).
+I have tried to apply the `acf()` on the SETAR(2,1,1) model from part one and there was some deregee of linear dependency measured. 
+
+I will only focus at the first 10 lags in order to reduce computation time in the `ldf()`.
 
 ```{r, fig.cap="\\label{fig_ex_11}ACF of the SETAR(2,1,1) model from part one."}
 # decrease the data set agian..
 if (nrow(data) == 2999) {
   n <- nrow(data)
-  data <- subset(data, subset = 1:n %in% 1:1000)
+  data <- subset(data, subset = 1:n %in% 1:999)
   n <- nrow(data)
 }
 
 #
-lags_acf <- data.frame(lag = acf(data$model_4, plot = F)$lag,
-                       acf = acf(data$model_4, plot = F)$acf,
-                       confi = 2/sqrt(n), # from introduction to times series
+lags_acf <- data.frame(lag = acf(data$y_SETAR, plot = F, lag.max = 10)$lag,
+                       acf = acf(data$y_SETAR, plot = F, lag.max = 10)$acf,
+                       confi = qnorm((1 + 0.95)/2)/sqrt(n), # from introduction to times series
                        zero = 0)
-
 #
 ggplot() +
   geom_segment(data = lags_acf,
@@ -827,6 +851,7 @@ ggplot() +
                    yend = -lags_acf$confi,
                    colour = "95%"),
                linetype = 2) +
+  scale_x_continuous(breaks = lags_acf$lag) + 
   labs(x = "lag", y = "value", color = "") +
   theme_TS()
 ```
@@ -835,17 +860,18 @@ Fig. \re{fig_ex_11} shows the ACF of the model $Y_t$ from eq. \ref{eq_4_1}.
 \item 
 \end{itemize}
 
-```{r, message=FALSE, fig.cap="\\label{fig_ex_12}"}
+```{r, include=FALSE, echo=FALSE, fig.cap="\\label{fig_ex_12}"}
 # load initial functions
 source("~/DTU/Courses/Advanced Time Series/Projects/CE_1/r/ldf.R")
 source("~/DTU/Courses/Advanced Time Series/Projects/CE_1/r/leaveOneOut.R")
-# lags_ldf <- ldf(x = data$model_4,
-#                 #lags = 1:10,
-#                 lags = 1:3,
-#                 plotIt = FALSE,
-#                 confidence_interval = 0.95)
+lags_ldf <- ldf(x = data$y_SETAR,
+                lags = 1:max(lags_acf$lag),
+                plotIt = FALSE,
+                confidence_interval = 0.95)
+```
 
-#
+
+```{r, fig.cap="\\label{fig_ex_12_1}"}
 ggplot() +
   geom_segment(data = lags_ldf,
                aes(x = lag,
@@ -867,12 +893,12 @@ ggplot() +
   #                 yend = -lags_ldf$confi,
   #                 colour = "95%"),
   #             linetype = 2) +
+  scale_x_continuous(breaks = lags_ldf$lag) + 
   labs(x = "lag", y = "value", color = "") +
   theme_TS()
-
 ```
 
-Fig. \re{fig_ex_12} shows the LDF of the model $Y_t$ from eq. \ref{eq_4_1}.
+Fig. \ref{fig_ex_12_1} shows the LDF of the model $Y_t$ from eq. \ref{eq_4_1}.
 \begin{itemize}
 \item 
 \end{itemize}
