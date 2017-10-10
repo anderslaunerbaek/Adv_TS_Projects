@@ -2,6 +2,8 @@
 title: 'Advanced Time Series Analysis: Computer Exercise 2'
 author: "Anders Launer Bæk (s160159)"
 date: "`r format(Sys.time(), '%d %B %Y')`"
+header-includes: 
+    - \usepackage{graphicx}
 output:
   pdf_document: default
 ---
@@ -39,69 +41,41 @@ theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
           legend.text = element_text(size = base_size, face = face, family = base_family))
 }
 
-fig <- local({
-    i <- 0
-    ref <- list()
-    list(
-        cap=function(refName, text) {
-            i <<- i + 1
-            ref[[refName]] <<- i
-            #paste("Figure ", i, ": ", text, sep="")
-            paste(text, sep="")
-        },
-        ref=function(refName) {
-            ref[[refName]]
-        })
-})
-# tab <- local({
-#     i <- 0
-#     ref <- list()
-#     list(
-#         cap=function(refName, text) {
-#             i <<- i + 1
-#             ref[[refName]] <<- i
-#             paste("Table ", i, ": ", text, sep="")
-#         },
-#         ref=function(refName) {
-#             ref[[refName]]
-#         })
-# })
-
-library(rgl)
 ```
-## Part 1
-There is generated $n=1000$ noise samples from a $x \sim \mathcal{N}(0,\,1)$ which is used as the noise input for `t` in all simulations in part one. 
+Sparring partners:
+\begin{itemize}
+\item Anja Liljedahl Christensen (s162876)
+\item Marie Mørk (s112770)
+\end{itemize}
 
-```{r, fig.cap="\\label{fig_ex_1}Plot of sampled noise."}
+## Part 1
+There are simulated $n=3000$ where $\epsilon_t \sim \mathcal{N}(0,\,1)$. $\epsilon_t$ is used as noise input for all simulations in part one.
+
+```{r}
 ## Number of samplepoints
 n <- 1000
-## Uniform distributed x
-#x <- runif(n,-1,1)
-## Errors
-# r <- rnorm(n, mean = 0, sd = 1)
-# r <- rnorm(3000, mean = 0, sd = 1)
-#save(r, file = "./noise.Rda")
-load(file = "./noise.Rda")
-#data <- data.frame(t = 1:n, x = x, noise = r)
+load(file = "~/DTU/Courses/Advanced Time Series/Projects/noise.Rda")
+
 data <- data.frame(t = 1:n, noise = r[1:n])
 
-# ggplot(data) +
-#    geom_point(aes(x = t, y = noise, color = "X ~ N(0, 1)"), alpha = 1/2) +
-#    labs(x = "t (time)", y = "y(t)", color = "") + 
-#    theme_TS()
+# define parameter for SETAR
+a0 <- c(0.125, -0.125) # off set
+a1 <- c(0.6, -0.4) # slope
+
 ```
 
-The equation below, eq. \ref{eq_1_2a} and eq. \ref{eq_1_2b}, determines the parameter set for the SETAR(2,1,1) model (eq. \ref{eq_1_SETAR_r}).
+The equation below shows the used parameters in the SETAR(2,1,1). Let us call eq. \ref{eq_1_2a} and eq. \ref{eq_1_2b} parameter set one ($par_1$).
 
 \begin{equation}
-a_0 = [2.0, -1.0]
+a_0 = [`r a0[1]`, `r a0[2]`]
 \label{eq_1_2a}
 \end{equation}
 \begin{equation}
-a_1 = [0.6, -0.9]
-\label{eq_1_1b}
+a_1 = [`r a1[1]`, `r a1[2]`]
+\label{eq_1_2b}
 \end{equation}
 
+ 
 ### Simulation of the SETAR(2,1,1)
 
 The Self-Exciting Threshold AR (SETAR) model is given by eq. \ref{eq_1_SETAR}.
@@ -117,16 +91,9 @@ X_t = \left\{ \begin{matrix} a_{0,1} + a_{1,1} X_{t- 1} + \epsilon_t & for & X_{
 \label{eq_1_SETAR_r}
 \end{equation}
 
-The model $X_t$ (eq. \ref{eq_1_SETAR_r}) has been simulated with two different set of parameters (eq. \ref{eq_1_2a} - eq. \ref{eq_12_2b}) and its simulations are plotted in fig. \ref{fig_ex_2}. 
+The model $X_t$ (eq. \ref{eq_1_SETAR_r}) has been simulated with $par_1$. Its simulation is plotted in fig. \ref{fig_ex_2}. 
 
-
-```{r, fig.cap="\\label{fig_ex_2}Two simulated SETAR(2,1,1) models using $par_1$ and $par_2$."}
-
-# define parameter
-a0 <- c(2.0, -1.0) # off set
-a1 <- c(0.6, -0.9) # slope
-
-
+```{r, fig.cap="\\label{fig_ex_1}Two simulated SETAR(2,1,1) models using $par_1$ and $par_2$."}
 ## Make a time series y with a regime model
 data$y_SETAR <- rep(NA,n)
 data$y_SETAR[1] <- data$noise[1]
@@ -146,40 +113,27 @@ data$y_SETAR_1[2:n] <- data$y_SETAR[1:(n-1)]
 # plot data
 ggplot(data) +
   geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  #ylim(0, 1) +
   labs(x = "y(t - 1)", y = "y(t)", color = "") +
   theme_TS()
 ```
 
-Fig. \ref{fig_ex_2} shows the plot of the SETAR(2,1,1) model with the two different parameter sets. 
-\begin{itemize}
-\item For both model it is possible to differentiate between the regimes and their transitions.
-\item It is also possible to see the inverse properties of the slop for the two models.
-\item Both models are using different offsets where the transition are most separated in the model which is using $par_2$.
-\end{itemize}
-
-
 ### Estimate the parameters using conditional least squares
 
-see section 5.5 on page 115
+see section 5.5 page 115
 
 ```{r, echo=TRUE}
 RSSSetar <- function(theta) {
   p1 <- theta[1]
   p2 <- theta[2]
+  
   ## Calculate the objective function value
   obj <- 1
   
   #
-  return(obj)
+  return(obj) 
 }
 ```
 
-```{r, fig.cap="\\label{fig_ex_3}Plot of sampled noise."}
 
-
-
-
-
-
-```
 
