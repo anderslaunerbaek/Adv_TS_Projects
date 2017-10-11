@@ -273,21 +273,42 @@ plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_chan
 
 ## Part 3
 
-I consider following non-linear doubly stochastic model, eq. \ref{eq_3_1}.
+
+AUTO regression outside one -> keep growing
+
+I will consider the following AR(2)-AR(4) non-linear doubly stochastic model, eq. \ref{eq_3_1}.
 
 \begin{equation}
-\begin{align}
-
-\end{align}
+\begin{aligned}
+Y_t &= \sum_{k = 1}^2 \left( \Phi_{t-(1-k)} Y_{t-k} \right) +\epsilon_t \\
+\Phi_t - \mu &= \sum_{n = 1}^4\left( \phi_{n}\left( \Phi_{t-n}- \mu\right)  \right) + \zeta_t \\
+\Phi_{ t } &= \sum_{ n=1 }^{ 4 } \left( \phi_{ n }\left( \Phi_{ t-n }-\mu  \right)  \right) +\zeta_{ t }+\underset { \delta }{ \underbrace { \mu \left( 1-\sum_{ n=1 }^{ 4 } \left( \phi_{ n } \right)  \right)  }  } 
+\end{aligned}
 \label{eq_3_1}
 \end{equation}
+
+
+state space
+\begin{equation}
+\begin{aligned}
+\begin{pmatrix}  \Phi_{t} \\ \Phi_{t-1}\\ \Phi_{t-2}\\ \Phi_{t-3} \\ \delta_t  \end{pmatrix} &=\begin{pmatrix} \phi_1 & \phi_2  & \phi_3  & \phi_4 &1 \\ 1 &0&0&0&0 \\ 0&1&0&0&0 \\ 0&0& 1 &0&0 \\  0&0&0&0&1  \end{pmatrix} \begin{pmatrix}  \Phi_{t-1} \\ \Phi_{t-2}\\ \Phi_{t-3}\\ \Phi_{t-4} \\ \delta_{t-1}  \end{pmatrix} + \begin{pmatrix}  1  \\ 0\\ 0\\ 0\\ 0 \end{pmatrix}\delta_t \\
+Y_t &=\begin{pmatrix} Y_{t-1} & Y_{t-1}  & 0& 0& 0 \end{pmatrix}\begin{pmatrix} \Phi_{ t } \\ \Phi_{ t-1 } \\ \Phi_{ t-2 } \\ \Phi_{ t-3 } \\ \delta _{ t } \end{pmatrix}+e_t
+\end{aligned}
+\label{eq_3_2}
+\end{equation}
+
+
+
+delta som state i stedet for constant -> estimate
 
 Tænk hvor havd der sker i den underlæggende proces ?
 
 hvordan er stationary conditions?
 
+Fordele ved at se delta som et state..
 
 
+Tjek for stabilitet
 
 ### Simulate 
 
@@ -297,10 +318,11 @@ data_3 <- subset(data, subset = 1:n %in% 1:nn, select = c("t"))
 n <- nrow(data_3)
 data_3$Y <- rep(NA, n)
 data_3$Phi <- rep(NA, n)
+data_3$delta <- rep(NA, n)
 
 mu <- 0.1
-sigma_2_zeta <- 0.10^2
-sigma_2_epsilon <- 4.0^2
+sigma_2_zeta <- 0.010^2
+sigma_2_epsilon <- 0.40^2
 
 data_3$zeta <- rnorm(n, mean = mu, sd = sqrt(sigma_2_zeta))
 data_3$epsilon <- rnorm(n, mean = mu, sd = sqrt(sigma_2_epsilon))
@@ -309,24 +331,41 @@ data_3$epsilon <- rnorm(n, mean = mu, sd = sqrt(sigma_2_epsilon))
 cov(data_3$zeta,data_3$epsilon)
 
 # init
-data_3$Y[1] <- data_3$epsilon[1]
+data_3$Y[1:4] <- data_3$epsilon[1:4]
 
-data_3$Phi[1] <- data_3$zeta[1]
-phi <- 0.85
-delta <- mu * (1 - phi)
+data_3$Phi[1:4] <- data_3$zeta[1:4]
+phi <- c(0.85,0.85,0.85,0.85) / 100
+data_3$delta[1] <- mu * (1 - sum(phi))
+
+
 
 # underlying
-A <- matrix(data = c(phi,0,1,1), nrow = 2, ncol = 2)
-X <- matrix(data = c(data_3$Phi[1], delta), nrow = 2)
-ZETA <- matrix(data = c(1,0), nrow = 2)
+A <- matrix(data = c(phi[1],phi[2],phi[3],phi[4],1,
+                1,0,0,0,0,
+                0,1,0,0,0,
+                0,0,1,0,0,
+                0,0,0,0,1), nrow = 5, ncol = 5, byrow = T)
 
-for (i in 2:n) {
+
+X <- matrix(data = c(data_3$Phi[nrow(A) - 1],
+                     data_3$Phi[nrow(A) - 2],
+                     data_3$Phi[nrow(A) - 3],
+                     data_3$Phi[nrow(A) - 4],
+                     data_3$delta[1]), nrow = 5)
+
+
+ZETA <- matrix(data = c(1,0,0,0,0), nrow = 5)
+
+for (i in nrow(A):n) {
   # underlying   
   X <- A %*% X + ZETA * data_3$zeta[i]  
   # capture Phi
   data_3$Phi[i] <- X[1]
+  data_3$delta[i] <- X[5]
   # overlying   
-  data_3$Y[i] <- matrix(data = c(data_3$Y[i - 1], 0), ncol = 2) %*% X + data_3$epsilon[i]  
+  data_3$Y[i] <- matrix(data = c(data_3$Y[i - 1],
+                                 data_3$Y[i - 2],
+                                 0,0,0), ncol = 5) %*% X + data_3$epsilon[i]  
   
 }
 
@@ -348,5 +387,273 @@ ggplot(data_3) +
 
 
 ### Comment
+
+## Part 4
+
+Following simple state space model is given, eq. \ref{eq_4_1}.
+\begin{equation}
+\begin{aligned}
+x_{t+1} &= a x_t + v_t
+y_t &= x_t + e_t
+\end{aligned}
+\label{eq_4_1}
+\end{equation}
+
+where $a$ is an unknown parameter and $v_t$ and $e_t$ are mutually uncorrelated white noise processes with their variences $\sigma^2_v$ and $\sigma^2_e$.
+
+### Part 4a
+
+
+
+The model from eq. \ref{eq_4_1} is on state space form in eq. \ref{eq_4_2}
+\begin{equation}
+\begin{aligned}
+x_{t+1} &= a x_t + v_t \\
+y_t &= x_t + e_t
+\end{aligned}
+\label{eq_4_2}
+\end{equation}
+
+#### Simulate
+Simulate X time series where $a = 0.4$, $\sigma^2_v = \sigma^2_e = 1$ with zero mean
+
+```{r}
+n <- 10000
+n_sim <- 20
+  
+simulate <- function(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = n){
+  data_4 <- data.frame(matrix(NA, nrow = n, ncol = n_sim))
+  
+  data_4$t <- 1:n
+  data_4$x <- rep(0, n)
+  
+  for (jj in 1:n_sim){
+    
+    set.seed(jj)
+    sig_v <- rnorm(n, mean = 0, sd = sigma2_v) 
+    set.seed(jj + n_sim)
+    sig_e <- rnorm(n, mean = 0, sd = sigma_e) 
+    
+    for (ii in 1:n){
+      if (ii < n) {
+        data_4$x[ii + 1] <- a * data_4$x[ii] + sig_v[ii]  
+      }
+      data_4[ii, jj] <- data_4$x[ii] + sig_e[ii]
+    }
+  }
+  return(data_4)
+}
+data_4 <- simulate(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = n)
+
+# ggplot(data_4) +
+#   geom_line(aes(x = t, y = X1, color = "X1"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X2, color = "X2"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X3, color = "X3"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X4, color = "X4"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X5, color = "X5"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X6, color = "X6"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X7, color = "X7"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X8, color = "X8"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X9, color = "X9"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X10, color = "X10"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X11, color = "X11"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X12, color = "X12"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X13, color = "X13"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X14, color = "X14"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X15, color = "X15"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X16, color = "X16"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X17, color = "X17"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X18, color = "X18"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X19, color = "X19"), alpha = 1/10) +
+#   geom_line(aes(x = t, y = X20, color = "X20"), alpha = 1/10) +
+#   labs(x = "t", y = "Y(t)", color = "") +
+#   theme_TS()
+```
+
+#### Rewrite 
+
+\begin{equation}
+\begin{aligned}
+\begin{pmatrix}  x_{t+1}  \\  a_{t+1}  \end{pmatrix} &=\begin{pmatrix}  a_t& 0 \\ 0 & a_t \end{pmatrix}\begin{pmatrix}  x_t\\1    \end{pmatrix} +\begin{pmatrix}  v_t \\ 0 \end{pmatrix} \\
+y_t &= \begin{pmatrix}  1&0  \end{pmatrix} \begin{pmatrix}  x_t\\1  \end{pmatrix} +e_t
+\end{aligned}
+\label{eq_4_3}
+\end{equation}
+
+### Part 4b
+```{r, echo=TRUE}
+##----------------------------------------------------------------
+## EKF algorithm for use in Part 4 of computer exercise 2 in
+## Advanced Time Series Analysis
+##----------------------------------------------------------------
+
+ext_kalman <- function(y, aInit = 0.5, aVarInit = 1, sigma.v = 1) {
+  ## aInit : The starting guess of the AR coefficient estimate
+  ## aVarInit : The initial variance for estimation of the AR coefficient
+  ## sigma.v : Standard deviation of the system noise of x in the filter
+
+  # Initialize----
+  # Init the state vector estimate
+  zt <- c(0,aInit)
+  # Init the variance matrices
+  Rv <- matrix(c(sigma.v^2,0,0,0), ncol=2)
+  # sigma.e : Standard deviation of the measurement noise in the filter
+  Re <- 1 
+
+  # Init the P matrix, that is the estimate of the state variance
+  Pt <- matrix(c(Re,0,0,aVarInit), nrow=2, ncol=2)
+  # The state is [X a] so the differentiated observation function is
+  Ht <- t(c(1,0))
+  # Init a vector for keeping the parameter a variance estimates
+  aVar <- rep(NA,length(y))
+  # and keeping the states
+  Z <- matrix(NA, nrow=length(y), ncol=2)
+  Z[1,] <- zt
+
+  ## The Kalman filtering----
+  for(t in 1:(length(y)-1)) {
+    # Derivatives (Jacobians)
+    Ft <- matrix(c(zt[2],0,zt[1],1), ncol=2)  # F_t-1
+    # Ht does not change 
+    
+    ## Prediction step
+    zt = c(zt[2]*zt[1],zt[2]) #z_t|t-1 f(z_t-1|t-1)
+    Pt = Ft %*% Pt %*% t(Ft) + Rv #P_t|t-1
+    
+    ## Update step
+    res = y[t] - zt[1] # the residual at time t
+    St =  Ht %*% Pt %*% t(Ht) + Re # innovation covariance
+    Kt = Pt %*% t(Ht) %*% St^-1 # Kalman gain
+    zt = zt + Kt * res # z_t|t
+    Pt = (diag(2) - Kt%*%Ht)%*%Pt #P_t|t
+    
+    ## Keep the state estimate
+    Z[t+1,] <- zt
+    ## Keep the P[2,2], which is the variance of the estimate of a
+    aVar[t+1] <- Pt[2,2]
+  }
+  return(list("zt" = zt, "Pt" = Pt, "Rv" = Rv, "aVar" = aVar, "Z" = Z))
+}
+
+```
+
+
+
+Check for converges in worst case
+
+```{r}
+ek <- ext_kalman(data_4$X1, aInit = 0.5, aVarInit = 10, sigma.v = 10)
+
+df <- data.frame(a = ek$Z[,2], a_var = ek$aVar)
+df$t <- 1:nrow(df)
+
+ggplot(df) +
+  geom_line(aes(x = t, y = a, color = "a"), alpha = 1/2) +
+  geom_line(aes(x = t, y = a_var, color = "a_var"), alpha = 1/2) +
+  labs(x = "t", y = "Y(t)", color = "") +
+  theme_TS()
+
+
+data_4 <- subset(data_4, subset = 1:n %in% 1:3000)
+n <- nrow(data_4)
+```
+
+
+
+
+
+
+
+
+```{r}
+
+
+list <- list("a0.5" = list("state1" = list("a_v_init" = 1,
+                                           "sigma_v_init" = 10),
+                           "state2" = list("a_v_init" = 1,
+                                           "sigma_v_init" = 1),
+                           "state3" = list("a_v_init" = 10,
+                                           "sigma_v_init" = 10),
+                           "state4" = list("a_v_init" = 10,
+                                           "sigma_v_init" = 1)),
+             "a-0.5" = list("state1" = list("a_v_init" = 1,
+                                           "sigma_v_init" = 10),
+                           "state2" = list("a_v_init" = 1,
+                                           "sigma_v_init" = 1),
+                           "state3" = list("a_v_init" = 10,
+                                           "sigma_v_init" = 10),
+                           "state4" = list("a_v_init" = 10,
+                                           "sigma_v_init" = 1)))
+
+for (scenario in 1:2) {
+  for (state in 1:4) {
+    list[[scenario]][[state]]$a_estimates <- rep(NA, n_sim)
+    list[[scenario]][[state]]$sigma_v <- rep(NA, n_sim)
+    for (ii in 1:n_sim) {
+      ek <- ext_kalman(data_4[,ii], aInit = 0.5, 
+                       aVarInit = list[[scenario]][[state]]$a_v_init, 
+                       sigma.v = list[[scenario]][[state]]$sigma_v_init)
+      # capture estimated a and sigma v
+      list[[scenario]][[state]]$a_estimates[ii] <- ek$zt[2]
+      list[[scenario]][[state]]$sigma_a[ii] <- ek$Pt[4]
+    
+    }
+    
+    list[[scenario]][[state]]$plot_a <- ggplot() +
+        aes(list[[scenario]][[state]]$a_estimates) +
+        geom_histogram() +
+        labs(y = "frequency", x = "a", color = "") +
+        theme_TS()
+    
+    list[[scenario]][[state]]$plot_sigma_a <- ggplot() +
+        aes(list[[scenario]][[state]]$sigma_a) +
+        geom_histogram() +
+        labs(y = "frequency", x = "sigma_v", color = "") +
+        theme_TS()
+    }
+}
+
+desc_stats <- function(scenario = 1) {
+  df <- data.frame(matrix(NA, nrow = 4, ncol = 7))
+  for (state in 1:4) {
+    df[state, 1] <- state
+    df[state, 2] <- list[[scenario]][[state]]$sigma_v_init
+    df[state, 3] <- list[[scenario]][[state]]$a_v_init
+    df[state, 4] <- mean(list[[scenario]][[state]]$a_estimates)
+    df[state, 5] <- sd(list[[scenario]][[state]]$a_estimates)
+    df[state, 6] <- mean(list[[scenario]][[state]]$sigma_a)
+    df[state, 7] <- sd(list[[scenario]][[state]]$sigma_a)
+  }
+  colnames(df) <- c("state", "sigma_v^2", "sigma_a", "a mean", "a sd", "a_var mean", "a_var sd")
+  return(df)
+}
+
+```
+
+
+#### a = 0.5
+```{r}
+knitr::kable(desc_stats(scenario = 1))
+```
+
+
+#### a = -0.5
+```{r}
+knitr::kable(desc_stats(scenario = 2))
+```
+
+hvordan påvirker størrelsen ad sigma_v2 og hvordan påvirkes
+
+variance of the system?
+
+
+
+
+
+### Improvements
+
+do regulizing of the sigma vector.. add some to the diagonal
+
+
 
 
