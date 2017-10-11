@@ -1,0 +1,84 @@
+### Analyses of the residuals
+
+#### Distribution of the residuals
+```{r}
+
+ggplot(data) +
+  geom_histogram(aes(x = rsssetar, color = "Residuals"), alpha = 1/2) +
+  #geom_line(aes(x = rsssetar_1, y = rsssetar, color = "mean"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "epsilon", y = "frequency", color = "") +
+  theme_TS()
+
+```
+
+
+#### QQ plot
+```{r}
+data$rsssetar_qq_x <- qqnorm(data$rsssetar, plot.it = FALSE)$x
+data$rsssetar_qq_y <- qqnorm(data$rsssetar, plot.it = FALSE)$y
+
+ggplot(data) +
+  geom_point(aes(x = rsssetar_qq_x, y = rsssetar_qq_y, color = "qqnorm"), alpha = 1/2) +
+  geom_smooth(aes(x = rsssetar_qq_x, y = rsssetar_qq_y, color = "qqline"), 
+              alpha = 1/2, method="lm", se=F) +
+  labs(x = "theoretical quantiles", y = "sample quantiles", color = "") +
+  theme_TS()
+```
+
+#### Cumulative Periodogram
+
+```{r}
+
+
+cpgram_func <- function (ts, taper = 0.1) {
+    
+    if (NCOL(ts) > 1) 
+        stop("only implemented for univariate time series")
+    x <- as.vector(ts)
+    x <- x[!is.na(x)]
+    x <- spec.taper(scale(x, TRUE, FALSE), p = taper)
+    y <- Mod(fft(x))^2/length(x)
+    y[1L] <- 0
+    n <- length(x)
+    x <- (0:(n/2)) * frequency(ts)/n
+    if (length(x)%%2 == 0) {
+        n <- length(x) - 1
+        y <- y[1L:n]
+        x <- x[1L:n]
+    }
+    else y <- y[seq_along(x)]
+    xm <- frequency(ts)/2
+    mp <- length(x) - 1
+    crit <- 1.358/(sqrt(mp) + 0.12 + 0.11/sqrt(mp))
+    oldpty <- par(pty = "s")
+    on.exit(par(oldpty))
+    return(list("df" = data.frame(x=x,y=cumsum(y)/sum(y)), 
+                "xlim" = c(0, xm), "ylim" = c(0, 1),
+                "confi_upper" = c(c(0, xm * (1 - crit)), c(crit, 1)),
+                "confi_lower" = c(c(xm * crit, xm), c(0, 1 - crit))
+                ))
+}
+test <- cpgram_func(data$rsssetar)
+cpgram_df <- test$df
+
+ggplot() +
+  geom_point(data = cpgram_df, aes(x = x, y = y, color = "cpgram"), alpha = 1/2) +
+  geom_segment(aes(x = test$confi_upper[1],
+                   y = test$confi_upper[3],
+                   xend = test$confi_upper[2],
+                   yend = test$confi_upper[4], colour = "CI"),
+               alpha = 1/2) +
+  geom_segment(aes(x = test$confi_lower[1],
+                   y = test$confi_lower[3],
+                   xend = test$confi_lower[2],
+                   yend = test$confi_lower[4], colour = "CI"),
+               alpha = 1/2) +
+  labs(x = "frequency", y = "", color = "") +
+  theme_TS()
+```
+
+
+
+
+

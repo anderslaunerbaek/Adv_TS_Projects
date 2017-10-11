@@ -53,7 +53,7 @@ There are simulated $n=3000$ where $\epsilon_t \sim \mathcal{N}(0,\,1)$. $\epsil
 
 ```{r}
 ## Number of samplepoints
-n <- 1000
+n <- 3000
 load(file = "~/DTU/Courses/Advanced Time Series/Projects/noise.Rda")
 
 data <- data.frame(t = 1:n, noise = r[1:n])
@@ -110,6 +110,9 @@ for(t in 2:n) {
 data$y_SETAR_1 <- rep(NA, n)
 data$y_SETAR_1[2:n] <- data$y_SETAR[1:(n-1)]
 
+
+data$mean_theo <- rep(NA, n)
+
 # plot data
 ggplot(data) +
   geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
@@ -120,20 +123,230 @@ ggplot(data) +
 
 ### Estimate the parameters using conditional least squares
 
-see section 5.5 page 115
-
 ```{r, echo=TRUE}
-RSSSetar <- function(theta) {
-  p1 <- theta[1]
-  p2 <- theta[2]
-  
-  ## Calculate the objective function value
-  obj <- 1
-  
+
+Setar <- function(par, model) {
   #
-  return(obj) 
+  e_mean <- rep(NA, length(model))
+  #
+  for(t in 2:length(model)) {
+    if(model[t - 1 ] <= 0) {
+      e_mean[t] <- par[1] + par[2] * model[t - 1]
+      } else {
+        e_mean[t] <- par[3] + par[4] * model[t - 1]
+      }
+    }
+  #
+  return(e_mean)
+}
+
+
+RSSSetar <- function(par, model) {
+  # conditional mean
+  e_mean <- Setar(par, model)
+  
+  ## Calculate and return the residuals
+  return((model - e_mean)^2)
+}
+
+
+PESetar <- function(par, model) {
+  # conditional mean
+  e_mean <- Setar(par, model)
+  
+  ## Calculate and return the objective function value
+  return(sum((model - e_mean)^2, na.rm = TRUE))
 }
 ```
 
+
+```{r}
+
+
+optimal_PE <- optim(par = c(a0[1],a1[1],a0[2],a1[2]), fn = PESetar, model = data$y_SETAR)
+
+data$y_SETAR_opti <- Setar(par = optimal_PE$par, model = data$y_SETAR)
+
+data$y_SETAR_mean <- Setar(par = c(a0[1],a1[1],a0[2],a1[2]), model = data$y_SETAR)
+
+data$rsssetar <- RSSSetar(par = optimal_PE$par, model = data$y_SETAR)
+
+
+
+
+# plot data
+ggplot(data) +
+  geom_point(aes(x = y_SETAR_1, y = y_SETAR, color = "SETAR(2,1,1)"), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = y_SETAR_mean, color = "M(x) theo."), alpha = 1/2) +
+  geom_line(aes(x = y_SETAR_1, y = y_SETAR_opti, color = "M(x) optim()"), alpha = 1/2) +
+  #ylim(0, 1) +
+  labs(x = "y(t - 1)", y = "y(t)", color = "") +
+  theme_TS()
+```
+
+
+Den lodrette linje findes selfølgelig ikke!!
+
+comment !!!
+
+
+
+## Part 2
+```{r}
+max_change_p <- 0.1
+resolution <- 50
+```
+
+
+resolution `r resolution`
+max_change_p `r max_change_p`
+
+only change the slope par[2] and par [4]
+
+```{r}
+# only change the slope par[2] and par [4]
+plot_contours <- function(model, par = optimal_PE$par, change_p = 0.1, nplot = 50){ 
+  #
+  par_2_seq <- seq(par[2] - par[2] * change_p, par[2] + par[2] * change_p, len = nplot)
+  par_4_seq <- seq(par[4] - par[4] * change_p, par[4] + par[4] * change_p, len = nplot)
+  
+  loess <- outer(par_2_seq, par_4_seq, function(par_2, par_4) {
+  L <- lapply(1:length(par_2), function(i) {
+    
+    return(PESetar(par = c(par[1], par_2[i], par[3], par_4[i]), model))
+    })
+  return(do.call("rbind",L))
+  })
+  
+  loess_melt <- reshape2::melt(loess)
+  loess_melt$Var1 <- par_2_seq[loess_melt$Var1]
+  loess_melt$Var2 <- par_4_seq[loess_melt$Var2]
+
+  return(ggplot(loess_melt, aes(x = Var1, y = Var2, z = value)) +
+    stat_contour(geom="polygon", aes(fill=..level..)) +
+    #scale_fill_gradient(low = "red", high = "blue") +
+      geom_point(aes(x = par[2], y =par[4] , color = "optim par_2,4"), alpha = 1/2) +
+    labs(x = "par[2]", y = "par[4]", color = "par_i") +
+    theme_TS())
+}
+```
+
+
+### N = 1:3000
+```{r, fig.cap="\\label{fig_ex_8_1}Contour plot of the conditional parametric model approach."}
+N = 1:3000
+plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
+```
+
+
+\ref{fig_ex_8_1}
+
+### N = 1:300
+```{r}
+N = 1:300
+plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
+```
+
+### N = 1:30
+```{r}
+N = 1:30
+plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
+```
+
+
+### N = 1001:1300
+```{r}
+N = 1001:1300
+plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
+```
+
+### N = 1001:1030
+```{r}
+N = 1001:1030
+plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
+```
+
+
+
+### Discuss my findings
+
+
+## Part 3
+
+I consider following non-linear doubly stochastic model, eq. \ref{eq_3_1}.
+
+\begin{equation}
+\begin{align}
+
+\end{align}
+\label{eq_3_1}
+\end{equation}
+
+Tænk hvor havd der sker i den underlæggende proces ?
+
+hvordan er stationary conditions?
+
+
+
+
+### Simulate 
+
+```{r}
+nn = 500
+data_3 <- subset(data, subset = 1:n %in% 1:nn, select = c("t"))
+n <- nrow(data_3)
+data_3$Y <- rep(NA, n)
+data_3$Phi <- rep(NA, n)
+
+mu <- 0.1
+sigma_2_zeta <- 0.10^2
+sigma_2_epsilon <- 4.0^2
+
+data_3$zeta <- rnorm(n, mean = mu, sd = sqrt(sigma_2_zeta))
+data_3$epsilon <- rnorm(n, mean = mu, sd = sqrt(sigma_2_epsilon))
+
+
+cov(data_3$zeta,data_3$epsilon)
+
+# init
+data_3$Y[1] <- data_3$epsilon[1]
+
+data_3$Phi[1] <- data_3$zeta[1]
+phi <- 0.85
+delta <- mu * (1 - phi)
+
+# underlying
+A <- matrix(data = c(phi,0,1,1), nrow = 2, ncol = 2)
+X <- matrix(data = c(data_3$Phi[1], delta), nrow = 2)
+ZETA <- matrix(data = c(1,0), nrow = 2)
+
+for (i in 2:n) {
+  # underlying   
+  X <- A %*% X + ZETA * data_3$zeta[i]  
+  # capture Phi
+  data_3$Phi[i] <- X[1]
+  # overlying   
+  data_3$Y[i] <- matrix(data = c(data_3$Y[i - 1], 0), ncol = 2) %*% X + data_3$epsilon[i]  
+  
+}
+
+ggplot(data_3) +
+  geom_line(aes(x = t, y = Y, color = "Y(t)"), alpha = 1/2) +
+  labs(x = "t", y = "Y(t)", color = "") +
+  theme_TS()
+```
+
+
+```{r}
+ggplot(data_3) +
+  geom_line(aes(x = t, y = Phi, color = "Phi(t)"), alpha = 1/2) +
+  labs(x = "t", y = "Y(t)", color = "") +
+  theme_TS()
+```
+
+
+
+
+### Comment
 
 
