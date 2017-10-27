@@ -194,7 +194,7 @@ knitr::kable(df_opti,
 
 The percentage deviation from the real parameters are within $\pm `r max(abs(df_opti[, 4]))`\%$. The optimized squared prediction error (`r PESetar(par = optimal_PE$par, model = data$y_SETAR)`) is smaller than the real squared error (`r PESetar(par = c(a0[1],a1[1],a0[2],a1[2]), model = data$y_SETAR)`) which is a subject of overfitting. Dividing data into train and test with proper cross validation techniques can solve the issue of overfitting.
 
-Fig. \ref{fig_ex_2} illustrate the conditional means for the SETAR(2,1,1) model with initial parameters (eqn. \ref{eq_1_2a_new} and eqn. \ref{eq_1_2b_new}), the real and estimated parameters (table \ref{tb_ex_1}). 
+Figure \ref{fig_ex_2} illustrate the conditional means for the SETAR(2,1,1) model with initial parameters (eqn. \ref{eq_1_2a_new} and eqn. \ref{eq_1_2b_new}), the real and estimated parameters (table \ref{tb_ex_1}). 
 
 ```{r, fig.cap="\\label{fig_ex_2}Simulations of a SETAR(2,1,1) model with the initial, real and optimized parameters. The vertical lines in the transition of the regimes does not exist."}
 # plot data
@@ -220,7 +220,7 @@ resolution <- 51 # must be odd
 It has been chosen to create a grid based upon the two slope parameters, eqn. \ref{eq_1_2b}. The grid is based on a matrix with the size $(`r resolution`, `r resolution`)$, where the center element, the intersection of the diagonal and off-diagnoal, is the optimal parameter value, and is highligthed with a blue dot. There is also illustrated a red dot, which shows the optimal parameters for the given subset of the simulation. 
 The first axis is $a_{1,1}$ parameter and the second axis in the $a_{1,2}$ parameter.
 
-The the diviation of the parameter values are $\pm`r max_change_p * 100`\%$ (`max_change_p`) of the optimal value. The following function has been used to plot the contours for the different subsets: `plot_contours()`.
+The the diviation of the parameter values are $\pm`r max_change_p * 100`\%$ (`max_change_p`) of the optimal value. The following function has been used to plot the contours for the different subsets: `plot_contours()`. General to the contour plots, close contour lines indenticate a higher slope of the curvature of the obejctive function. 
 
 ```{r, echo=TRUE}
 # only change the slope par[2] and par [4]
@@ -229,22 +229,16 @@ plot_contours <- function(model, par = optimal_PE$par, change_p = max_change_p, 
   par_2_seq <- seq(par[2] - par[2] * change_p, par[2] + par[2] * change_p, len = nplot)
   par_4_seq <- seq(par[4] - par[4] * change_p, par[4] + par[4] * change_p, len = nplot)
   
-  # loop the matrix and calculate the values
-  loess <- outer(par_2_seq, par_4_seq, function(par_2, par_4) {
-    L <- lapply(1:length(par_2), function(i) { 
-      return(PESetar(par = c(par[1], par_2[i],
-                             par[3], par_4[i]),
-                     model = model)) 
-      })
-    return(do.call("rbind",L))
-  })
+  # create grid
+  loess_melt <- expand.grid(par_2_seq, par_4_seq)
   
-  # reshape in order to plot the contours
-  loess_melt <- reshape2::melt(loess)
-  loess_melt$Var1 <- par_2_seq[loess_melt$Var1]
-  loess_melt$Var2 <- par_4_seq[loess_melt$Var2]
+  # caculate values
+  loess_melt$value <- sapply(1:nrow(loess_melt), function(i) { 
+    return(PESetar(par = c(par[1], loess_melt$Var1[i],
+                           par[3], loess_melt$Var2[i]),
+                   model = model)) }) 
   
-  #
+  # find optimal subset value 
   min_val <- loess_melt[which.min(loess_melt$value), ]
   
   # return contour plot 
@@ -295,99 +289,93 @@ plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_chan
 ```
 
 ### N = 1001:1300
-Figure \ref{fig_ex_2_4}
+Figure \ref{fig_ex_2_4} uses same number of simulated samples but in an different "localtion" of the simulated data. The optimal subset parameters is not within $\pm `r max_change_p * 100`\%$ of the optimized parameters which is opposite to fig. \ref{fig_ex_2_2}.
 ```{r, fig.cap="\\label{fig_ex_2_4}Contour plot the slope parameters for N = 1001:1300."}
 N = 1001:1300
 plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
 ```
 
 ### N = 1001:1030
-Figure \ref{fig_ex_2_5}
+The best subset parameters in fig. \ref{fig_ex_2_5} are not within $\pm `r max_change_p * 100`\%$ of the optimized parameters.
 
 ```{r, fig.cap="\\label{fig_ex_2_5}Contour plot the slope parameters for N = 1001:1030."}
 N = 1001:1030
 plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
 ```
 
-
-
-### Discuss my findings
-
-
-The overall optimal parameter is best when selecting every observations...
-
-smaller subset smaller total prediction error.
+### Findings
+\begin{itemize}
+\item The optimization of the parameters must occur with respect to the wanted (sub)set of the simulated data. 
+\item The biggest changes for the optimal subset parameters is for the $a_{1,2}$ parameter. In figures \ref{fig_ex_2_2} and \ref{fig_ex_2_3} the best subset $a_{1,2}$ parameter is smaller then the optimized value of $a_{1,2}$.\\ 
+Opposite in figures \ref{fig_ex_2_4} and \ref{fig_ex_2_5}, the best subset $a_{1,2}$ parameter must be higher than the optimized $a_{1,2}$ parameter. 
+\item The total squared prediction error scales well with the number of considered simulated data. This can indenticate that the residuals are normally distritubed over the entrie simulated process. 
+\end{itemize}
 
 
 \newpage
 ## Part 3
-
-AUTO regression outside/greater one -> keep growing
-
-I will consider the following AR(2)-AR(4) non-linear doubly stochastic model, eqn. \ref{eq_3_1}.
+The chosen model for the doubly stochastic model, is an AR(2)-AR(4) model, see eqn. \ref{eq_3_1}.
 
 \begin{equation}
 \begin{aligned}
 Y_t &= \sum_{k = 1}^2 \left( \Phi_{t-(1-k)} Y_{t-k} \right) +\epsilon_t \\
 \Phi_t - \mu &= \sum_{n = 1}^4\left( \phi_{n}\left( \Phi_{t-n}- \mu\right)  \right) + \zeta_t \\
-\Phi_{ t } &= \sum_{ n=1 }^{ 4 } \left( \phi_{ n }\left( \Phi_{ t-n }-\mu  \right)  \right) +\zeta_{ t }+\underset { \delta }{ \underbrace { \mu \left( 1-\sum_{ n=1 }^{ 4 } \left( \phi_{ n } \right)  \right)  }  } 
+\Phi_{ t } &= \sum_{ n=1 }^{ 4 } \left( \phi_{ n }\left( \Phi_{ t-n }-\mu  \right)  \right) +\zeta_{ t }+\underset { \delta_t }{ \underbrace { \mu \left( 1-\sum_{ n=1 }^{ 4 } \left( \phi_{ n } \right)  \right)  }  } 
 \end{aligned}
 \label{eq_3_1}
 \end{equation}
 
+Equation \ref{eq_3_2} shows eqn. \ref{eq_3_1} in a reparameterizated state space format.
 
-state space
 \begin{equation}
 \begin{aligned}
 \begin{pmatrix}  \Phi_{t} \\ \Phi_{t-1}\\ \Phi_{t-2}\\ \Phi_{t-3} \\ \delta_t  \end{pmatrix} &=\begin{pmatrix} \phi_1 & \phi_2  & \phi_3  & \phi_4 &1 \\ 1 &0&0&0&0 \\ 0&1&0&0&0 \\ 0&0& 1 &0&0 \\  0&0&0&0&1  \end{pmatrix} \begin{pmatrix}  \Phi_{t-1} \\ \Phi_{t-2}\\ \Phi_{t-3}\\ \Phi_{t-4} \\ \delta_{t-1}  \end{pmatrix} + \begin{pmatrix}  1  \\ 0\\ 0\\ 0\\ 0 \end{pmatrix}\delta_t \\
-Y_t &=\begin{pmatrix} Y_{t-1} & Y_{t-1}  & 0& 0& 0 \end{pmatrix}\begin{pmatrix} \Phi_{ t } \\ \Phi_{ t-1 } \\ \Phi_{ t-2 } \\ \Phi_{ t-3 } \\ \delta _{ t } \end{pmatrix}+e_t
+Y_t &=\begin{pmatrix} Y_{t-1} & Y_{t-2}  & 0& 0& 0 \end{pmatrix}\begin{pmatrix} \Phi_{ t } \\ \Phi_{ t-1 } \\ \Phi_{ t-2 } \\ \Phi_{ t-3 } \\ \delta _{ t } \end{pmatrix}+e_t
 \end{aligned}
 \label{eq_3_2}
 \end{equation}
-
-
-
-delta som state i stedet for constant -> estimate
-
-Tænk hvor havd der sker i den underlæggende proces ?
-
-hvordan er stationary conditions?
-
-Fordele ved at se delta som et state..
-
-
-Tjek for stabilitet
 
 ### Simulate 
 
 ```{r}
 nn = 500
-data_3 <- subset(data, subset = 1:n %in% 1:nn, select = c("t"))
-n <- nrow(data_3)
-data_3$Y <- rep(NA, n)
-data_3$Phi <- rep(NA, n)
-data_3$delta <- rep(NA, n)
+data_3 <- data.frame(t = 1:nn)
+
+data_3$Y <- rep(NA, nn)
+data_3$Phi <- rep(NA, nn)
+data_3$delta <- rep(NA, nn)
 
 mu <- 0.1
-sigma_2_zeta <- 0.010^2
+sigma_2_zeta <- 0.080^2
 sigma_2_epsilon <- 0.40^2
 
-data_3$zeta <- rnorm(n, mean = mu, sd = sqrt(sigma_2_zeta))
-data_3$epsilon <- rnorm(n, mean = mu, sd = sqrt(sigma_2_epsilon))
+data_3$zeta <- rnorm(nn, mean = mu, sd = sqrt(sigma_2_zeta))
+data_3$epsilon <- rnorm(nn, mean = mu, sd = sqrt(sigma_2_epsilon))
+```
 
 
-cov(data_3$zeta,data_3$epsilon)
+The initial parameters for the simulation are given in eqn. \ref{eq_3_4}.
+\begin{equation}
+\begin{aligned}
+n =& `r nn` \\
+\mu =& `r mu` \\
+\zeta =& `r sqrt(sigma_2_zeta)` \\
+\epsilon =& `r sqrt(sigma_2_epsilon)` \\
+\delta_{t} \sim& \mathcal{N}( \mu,\,\zeta)  \\
+e_{t} \sim& \mathcal{N}( \mu,\,\epsilon)
+\end{aligned}
+\label{eq_3_4}
+\end{equation}
 
-# init
+
+```{r, fig.cap="\\label{fig_ex_3_1}Simulated process of Y(t)."}
+# init ----
 data_3$Y[1:4] <- data_3$epsilon[1:4]
-
 data_3$Phi[1:4] <- data_3$zeta[1:4]
 phi <- c(0.85,0.85,0.85,0.85) / 100
 data_3$delta[1] <- mu * (1 - sum(phi))
 
-
-
-# underlying
+# underlying ----
 A <- matrix(data = c(phi[1],phi[2],phi[3],phi[4],1,
                 1,0,0,0,0,
                 0,1,0,0,0,
@@ -403,8 +391,7 @@ X <- matrix(data = c(data_3$Phi[nrow(A) - 1],
 
 
 ZETA <- matrix(data = c(1,0,0,0,0), nrow = 5)
-
-for (i in nrow(A):n) {
+for (i in nrow(A):nn) {
   # underlying   
   X <- A %*% X + ZETA * data_3$zeta[i]  
   # capture Phi
@@ -413,8 +400,7 @@ for (i in nrow(A):n) {
   # overlying   
   data_3$Y[i] <- matrix(data = c(data_3$Y[i - 1],
                                  data_3$Y[i - 2],
-                                 0,0,0), ncol = 5) %*% X + data_3$epsilon[i]  
-  
+                                 0,0,0), ncol = 5) %*% X + data_3$epsilon[i]
 }
 
 ggplot(data_3) +
@@ -424,17 +410,30 @@ ggplot(data_3) +
 ```
 
 
-```{r}
+```{r, fig.cap="\\label{fig_ex_3_2}Simulated process of Phi(t)."}
 ggplot(data_3) +
   geom_line(aes(x = t, y = Phi, color = "Phi(t)"), alpha = 1/2) +
-  labs(x = "t", y = "Y(t)", color = "") +
-  theme_TS()
+  labs(x = "t", y = "Phi(t)", color = "") +
+  theme_TS() 
+
 ```
 
 
 
 
 ### Comment
+
+
+delta som state i stedet for constant -> estimate
+
+Tænk hvor havd der sker i den underlæggende proces ?
+
+hvordan er stationary conditions?
+
+Fordele ved at se delta som et state..
+
+
+Tjek for stabilitet
 
 \newpage
 ## Part 4
@@ -467,10 +466,10 @@ y_t &= x_t + e_t
 Simulate X time series where $a = 0.4$, $\sigma^2_v = \sigma^2_e = 1$ with zero mean
 
 ```{r}
-n <- 10000
+nnn <- 10000
 n_sim <- 20
   
-simulate <- function(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = n){
+simulate <- function(a = 0.4, sigma2_v = 1, sigma_e = 1, n_sim = n_sim, n = n){
   data_4 <- data.frame(matrix(NA, nrow = n, ncol = n_sim))
   
   data_4$t <- 1:n
@@ -492,7 +491,7 @@ simulate <- function(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = n){
   }
   return(data_4)
 }
-data_4 <- simulate(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = n)
+data_4 <- simulate(a = 0.4, sigma2_v = 1, sigma_e = 1,n_sim = n_sim, n = nnn)
 
 # ggplot(data_4) +
 #   geom_line(aes(x = t, y = X1, color = "X1"), alpha = 1/10) +
