@@ -217,10 +217,10 @@ max_change_p <- 0.3
 resolution <- 51 # must be odd
 ```
 
-It has been chosen to create a grid based upon the two slope parameters, eqn. \ref{eq_1_2b}. The grid is based on a matrix with the size $(`r resolution`, `r resolution`)$, where the center element, the intersection of the diagonal and off-diagnoal, is the optimal parameter value, and is highligthed with a blue dot. There is also illustrated a red dot, which shows the optimal parameters for the given subset of the simulation. 
+It has been chosen to create a grid based upon the two slope parameters, eqn. \ref{eq_1_2b}. The grid is based on a matrix with the size $(`r resolution`, `r resolution`)$, where the centre element, the intersection of the diagonal and off-diagonal, is the optimal parameter value, and is highlighted with a blue dot. There is also illustrated a red dot, which shows the optimal parameters for the given subset of the simulation. 
 The first axis is $a_{1,1}$ parameter and the second axis in the $a_{1,2}$ parameter.
 
-The the diviation of the parameter values are $\pm`r max_change_p * 100`\%$ (`max_change_p`) of the optimal value. The following function has been used to plot the contours for the different subsets: `plot_contours()`. General to the contour plots, close contour lines indenticate a higher slope of the curvature of the obejctive function. 
+The the deviation of the parameter values are $\pm`r max_change_p * 100`\%$ (`max_change_p`) of the optimal value. The following function has been used to plot the contours for the different subsets: `plot_contours()`. General to the contour plots, close contour lines identicate a higher slope of the curvature of the objective function. 
 
 ```{r, echo=TRUE}
 # only change the slope par[2] and par [4]
@@ -259,12 +259,12 @@ plot_contours <- function(model, par = optimal_PE$par, change_p = max_change_p, 
 }
 ```
 
-The contour plots illustatres the objective function (total squared prediction error) with changes in each changeable parameter. The objective function is convex which means there is only one local/global minima.
+The contour plots illustrates the objective function (total squared prediction error) with changes in each changeable parameter. The objective function is convex which means there is only one local/global minima.
 
 ### N = 1:3000
-Figure \ref{fig_ex_2_1} shows the contour plot for the complete simulated model. The optimal parameters gives the global minima of the objective function, and the two dots are identical as illustared. 
+Figure \ref{fig_ex_2_1} shows the contour plot for the complete simulated model. The optimal parameters gives the global minima of the objective function, and the two dots are identical as illustrated. 
 
-The $a_{1,1}$ paramter will result in a higher objective function with equally changes in both parameter.
+The $a_{1,1}$ parameter will result in a higher objective function with equally changes in both parameter.
 ```{r, fig.cap="\\label{fig_ex_2_1}Contour plot the slope parameters for N = 1:3000."}
 N = 1:3000
 plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
@@ -273,7 +273,7 @@ plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_chan
 ### N = 1:300
 Figure \ref{fig_ex_2_2} shows the contour plot with only $N = 1:300$ samples of the simulated model considered. The number of samples are decreased with a factor of 100 similar to the objective function.
 
-The optimal parameters does not represent the minimum value of the of the objective function. There is a clear speration of the two dots and the their values are different, see labels in fig. \ref{fig_ex_2_2}.
+The optimal parameters does not represent the minimum value of the of the objective function. There is a clear separation of the two dots and the their values are different, see labels in fig. \ref{fig_ex_2_2}.
 
 ```{r, fig.cap="\\label{fig_ex_2_2}Contour plot the slope parameters for N = 1:300."}
 N = 1:300
@@ -289,7 +289,7 @@ plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_chan
 ```
 
 ### N = 1001:1300
-Figure \ref{fig_ex_2_4} uses same number of simulated samples but in an different "localtion" of the simulated data. The optimal subset parameters is not within $\pm `r max_change_p * 100`\%$ of the optimized parameters which is opposite to fig. \ref{fig_ex_2_2}.
+Figure \ref{fig_ex_2_4} uses same number of simulated samples but in an different "location" of the simulated data. The optimal subset parameters is not within $\pm `r max_change_p * 100`\%$ of the optimized parameters which is opposite to fig. \ref{fig_ex_2_2}.
 ```{r, fig.cap="\\label{fig_ex_2_4}Contour plot the slope parameters for N = 1001:1300."}
 N = 1001:1300
 plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_change_p, nplot = resolution)
@@ -308,7 +308,7 @@ plot_contours(model = data$y_SETAR[N], par = optimal_PE$par, change_p = max_chan
 \item The optimization of the parameters must occur with respect to the wanted (sub)set of the simulated data. 
 \item The biggest changes for the optimal subset parameters is for the $a_{1,2}$ parameter. In figures \ref{fig_ex_2_2} and \ref{fig_ex_2_3} the best subset $a_{1,2}$ parameter is smaller then the optimized value of $a_{1,2}$.\\ 
 Opposite in figures \ref{fig_ex_2_4} and \ref{fig_ex_2_5}, the best subset $a_{1,2}$ parameter must be higher than the optimized $a_{1,2}$ parameter. 
-\item The total squared prediction error scales well with the number of considered simulated data. This can indenticate that the residuals are normally distritubed over the entrie simulated process. 
+\item The total squared prediction error scales well with the number of considered simulated data. This can identicate that the residuals are normally distributed over the entire simulated process. 
 \end{itemize}
 
 
@@ -325,7 +325,7 @@ Y_t &= \sum_{k = 1}^2 \left( \Phi_{t-(1-k)} Y_{t-k} \right) +\epsilon_t \\
 \label{eq_3_1}
 \end{equation}
 
-Equation \ref{eq_3_2} shows eqn. \ref{eq_3_1} in a reparameterizated state space format.
+Equation \ref{eq_3_2} shows eqn. \ref{eq_3_1} in a reparametrized state space format.
 
 \begin{equation}
 \begin{aligned}
@@ -423,8 +423,8 @@ ggplot(data_3) +
 
 ### Comment
 \begin{itemize}
-\item Figure \ref{fig_ex_3_2} shows the underlying process of the doubly stochastic model and the its shows a rapdily increase after the first samples where the process more less stabilize around $`r round(mean(data_3[,"Phi"]), 2)`$ afterwards.
-\item Chossing the intitial parameters for this doubly stochastic model is critical and needs to be done with stability in mind. 
+\item Figure \ref{fig_ex_3_2} shows the underlying process of the doubly stochastic model and the its shows a rapidly increase after the first samples where the process more less stabilize around $`r round(mean(data_3[,"Phi"]), 2)`$ afterwards.
+\item Choosing the initial parameters for this doubly stochastic model is critical and needs to be done with stability in mind. 
 \item todo: Stability in the underlying process? and stability in the overlying process?
 \end{itemize}
 
@@ -441,7 +441,7 @@ y_t &= x_t + e_t
 \label{eq_4_1}
 \end{equation}
 
-where $a$ is an unknown parameter and $v_t$ and $e_t$ are mutually uncorrelated white noise processes with their variences $\sigma^2_v$ and $\sigma^2_e$.
+where $a$ is an unknown parameter and $v_t$ and $e_t$ are mutually uncorrelated white noise processes with their variances $\sigma^2_v$ and $\sigma^2_e$.
 
 ### Part 4a
 
@@ -592,7 +592,7 @@ ext_kalman <- function(y, aInit = 0.5, aVarInit = 1, sigma.v = 1) {
 }
 
 ```
-There has been UDFØRT a small test to find the number of needed sampels for converges of the filter estimate. The test is based upon the worst case senario where the initial variance of the filter and parameters is $10$. The inital value of the parameter is $a = 0.5$.
+There has been executed  a small test to find the number of needed samples for converges of the filter estimate. The test is based upon the worst case scenario where the initial variance of the filter and parameters is $10$. The initial value of the parameter is $a = 0.5$.
 
 Figure \ref{fig_ex_4_1} shows the converges test for the filter estimate. The variance of the parameter and the estimated value of the parameter. 
 
@@ -693,7 +693,7 @@ desc_stats <- function(scenario) {
 
 ```
 
-Table \ref{tb_4_1} and table \ref{tb_4_2} shows the inital variance values for each combination averages over the `r n_sim` simulations: The mean estimated value of $a$, the standard diviation of the estimated $a$, the mean value of the variance and the standard diviation of the variance.   
+Table \ref{tb_4_1} and table \ref{tb_4_2} shows the initial variance values for each combination averages over the `r n_sim` simulations: The mean estimated value of $a$, the standard deviation of the estimated $a$, the mean value of the variance and the standard deviation of the variance.   
 
 #### a = 0.5
 Table \ref{tb_4_1} shows the statistics for $a = 0.5$.
@@ -712,7 +712,7 @@ knitr::kable(desc_stats(scenario = 2), caption = "\\label{tb_4_2}Statistic for f
 #### Comments
 According to table \ref{tb_4_1} and table \ref{tb_4_2} there is not much of a difference in when selecting different initial parameter value of $a$. Therefore some common comments.
 \begin{itemize}
-\item The most important parameter, when using filter to estimate parameter(s), is the variance of the filter. The combinations with a low filter variance result in a reasonable parameter estimate, close to the original value of $a$, regarding the intial value of variance of the parameter.
+\item The most important parameter, when using filter to estimate parameter(s), is the variance of the filter. The combinations with a low filter variance result in a reasonable parameter estimate, close to the original value of $a$, regarding the initial value of variance of the parameter.
 \item In both combinations where $\sigma_v^2 = 1$ is the estimated value of $a$ slightly above the original value of $a$. 
 \end{itemize}
 
@@ -720,7 +720,7 @@ According to table \ref{tb_4_1} and table \ref{tb_4_2} there is not much of a di
 ### Improvements
 Estimate a parameter with an extended Kalman filter will introduce a bias estimate coursed by the properties of the the filter. 
 \begin{itemize}
-\item The local linearization, which introduces the bias, can be affected and improved by adding proper scaled gaussian noise to the estimated parameter in the state space model (eqn. \ref{eq_4_3}) with an decay of $\frac{1}{t}$.
-\item By substituting the extended Kalman filter whit an unsencted Kalman filter will **possiblely** perform better, because the **HELP**.
-\item An different approach could be to do Maximum likelihood estimated of the parameter instead. 
+\item The local linearisation, which introduces the bias, can be affected and improved by adding proper scaled Gaussian noise to the estimated parameter in the state space model (eqn. \ref{eq_4_3}) with an decay of $\frac{1}{t}$.
+\item By substituting the extended Kalman filter whit an unscented Kalman filter will possibly increase accuracy of the estimated parameter value. The unscented Kalman filter approximates a Gaussian distribution with a deterministic sampling approach and here by captures the mean and covariance, which in most cases outperform the extended Kalman filter\footnote{Mentioned at the lecture October 25.}.
+\item An different approach could be to use maximum likelihood estimation of the parameter instead. 
 \end{itemize}
