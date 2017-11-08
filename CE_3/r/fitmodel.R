@@ -1,6 +1,8 @@
 ##----------------------------------------------------------------
+rm(list=ls())
+
 ## Source the scripts with functions in the "functions" folder
-files <- dir("functions", full.names=TRUE)
+files <- dir("~/DTU/Courses/Advanced Time Series/Projects/CE_3/r/functions", full.names=TRUE)
 for(i in 1:length(files)) source(files[i])
 
 ## Use the ctsmr package
@@ -16,7 +18,7 @@ prm$longitude <- 12.525545
 
 ##----------------------------------------------------------------
 ## Read the X210 East room data
-data <- read.csv("data.csv",stringsAsFactors=FALSE)
+data <- read.csv("~/DTU/Courses/Advanced Time Series/Projects/CE_3/data.csv",stringsAsFactors=FALSE)
 ## Take the needed series
 data <- data[,c(1,2,4,5,6,3)]
 ## Give names to the series
@@ -33,9 +35,12 @@ plotTSBeg(3,cex=0.7)
 ## Plot the time series
 plot(data$timedate,data$Ph,type="l")
 plot(data$timedate,data$Ta,type="n",ylim=c(0,45))
+
 lines(data$timedate,data$Ta)
 lines(data$timedate,data$yTi,col=2)
 lines(data$timedate,data$Tn,col=3)
+
+
 plot(data$timedate,data$Gv,type="l")
 plotTSXAxis(data$timedate)
 ##----------------------------------------------------------------
@@ -156,7 +161,8 @@ model.Ti$setParameter( e11 = c(init=-1  ,lb=-50   ,ub=10 ) )
 fit.Ti <- model.Ti$estimate(data)
 
 ## Analyze the result
-analyzeFit(fit.Ti)
+
+analyzeFit(fit)
 ##----------------------------------------------------------------
 
 
