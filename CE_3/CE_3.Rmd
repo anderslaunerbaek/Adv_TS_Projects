@@ -95,13 +95,7 @@ Sparring partners:
 \item Marie Mørk (s112770)
 \end{itemize}
 
-
-Når der kommer støj bliver den skubbert væk fra 
-
-Minimere det fysiske potentiale
-
-
-## Part 1: Simulation and discretization of di usion processes
+## Part 1: Simulation and discretization of diffusion processes
 ```{r}
 Theta <- c(0.7, 0.8, 3.0, -0.34)
 delta <- 2^-9
@@ -110,50 +104,70 @@ T <- 100
 t <- seq(from = 0, to = T, by = delta)
 ```
 
+Equation 2a and 2b from the description have been discretized and they are showed in eqn. \ref{eqn_1_1}.
+\begin{equation}
+\begin{aligned}
+Y_{n+1}^1 &= Y_n^1+ \theta_3\left(Y_n^1 + Y_n^2 - \frac{1}{3}\left(Y_n^1  \right)^3 + \theta_4  \right)\Delta+\sigma\Delta W^1_{n+1} \\
+Y_{n+1}^2 &= Y_n^2 - \frac{1}{\theta_3} \left(Y_n^1 +\theta_2Y_n^2 - \theta_1  \right) \Delta
+\end{aligned}
+\label{eqn_1_1}
+\end{equation}
+
+The initial parameters for this diffusion process are given in eqn. \ref{eqn_1_2}.
+
+\begin{equation}
+\begin{aligned}
+\theta_{1,2,3,4} &= [`r Theta[1]`,\,`r Theta[2]`,\,`r Theta[3]`,\,`r Theta[4]`] \\
+\Delta &= `r delta` \\
+\sigma &= `r sigma` \\
+T &= `r T` \\
+t &= 1:\Delta:T \\
+\Delta W^1_{n+1} &\sim \mathcal{N}\left(0,\,\Delta  \right)
+\end{aligned}
+\label{eqn_1_2}
+\end{equation}
+
+
 ### Question 1a
-```{r}
+It is possible to change the process by changes the value of $\sigma$. An increase in $\sigma$ will provide a bigger variation in the Wiener process. Below there have been plotted relizations of $Y_k^1$ and $Y_k^2$ wrt. time and a phase plot of $Y_k^1$ and $Y_k^2$. 
+The following function `model_func()` has been used to plot 
+
+```{r, echo=TRUE}
 # function ----
 model_func <- function(sigma, delta, t, Theta, init_values) {
-  #
-  data <- data.frame(T = t,
-                   Y_1 = NA,
-                   Y_2 = NA)
-  set.seed(22)
-  data$W <- rnorm(nrow(data), mean = 0, sd = delta)
-
+  # initilize data.frame and initial values
+  data <- data.frame(T = t, Y_1 = NA, Y_2 = NA)
   data$Y_1[1] <- init_values[1]
   data$Y_2[1] <- init_values[2]
-  
-  
+  # simulate winer process
+  set.seed(22)
+  data$W <- rnorm(nrow(data), mean = 0, sd = delta)
+  # run the simulation
   # loop
   for(k in 1:(nrow(data)-1)){
-    #
+    # Y_k^1
     data$Y_1[k + 1] <- data$Y_1[k] + Theta[3] * 
       (data$Y_1[k] + data$Y_2[k] - 1/3 * data$Y_1[k]^3 
        + Theta[4]) * delta + sigma  * data$W[k + 1]
-    
-    #
+    # Y_k^2
     data$Y_2[k + 1] <- data$Y_2[k] - 1/Theta[3] * 
       (data$Y_1[k] + Theta[2] * data$Y_2[k] - Theta[1]) * delta
   }
   # realizations
   re_plot <- ggplot2::ggplot(data) + 
-    geom_point(aes(x = T, y = Y_1, color = "Y_k^1"), alpha = 1/2) +
-    geom_point(aes(x = T, y = Y_2, color = "Y_k^2"), alpha = 1/2) +
-    labs(x = "t", y = "Y_k^*(t) ", color = "") +
+    ggplot2::geom_point(ggplot2::aes(x = T, y = Y_1, color = "Y_k^1"), alpha = 1/2) +
+    ggplot2::geom_point(ggplot2::aes(x = T, y = Y_2, color = "Y_k^2"), alpha = 1/2) +
+    ggplot2::labs(x = "t", y = "Y_k^*(t) ", color = "") +
     theme_TS()
-  
   # phase
   ph_plot <- ggplot2::ggplot(data) + 
-    geom_point(aes(x = Y_1, y = Y_2, color = "Phase"), alpha = 1/2) +
-    labs(x = "Y_k^1(t)", y = "Y_k^2(t)", color = "") +
+    ggplot2::geom_point(ggplot2::aes(x = Y_1, y = Y_2, color = "Phase"), alpha = 1/2) +
+    ggplot2::labs(x = "Y_k^1(t)", y = "Y_k^2(t)", color = "") +
     theme_TS()
-  return(list("sim" = data,
-              "re_plot" = re_plot,
-              "ph_plot" = ph_plot))
+  return(list("sim" = data, "re_plot" = re_plot, "ph_plot" = ph_plot))
 }
 ```
-
+\newpage
 #### $\sigma = 0.00$
 
 ```{r, fig.cap="\\label{fig_ex_1_11}Plot of the simulation realizations with sigma = 0.0."}
@@ -164,7 +178,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_12}Phase plot of the simulation with sigma = 0.0."}
 tmp$ph_plot
 ```
-
+\newpage
 #### $\sigma = 0.10$
 
 ```{r, fig.cap="\\label{fig_ex_1_21}Plot of the simulation realizations with sigma = 0.10."}
@@ -175,7 +189,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_22}Phase plot of the simulation with sigma = 0.10."}
 tmp$ph_plot
 ```
-
+\newpage
 #### $\sigma = 0.20$
 
 ```{r, fig.cap="\\label{fig_ex_1_31}Plot of the simulation realizations with sigma = 0.20."}
@@ -186,7 +200,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_32}Phase plot of the simulation with sigma = 0.20."}
 tmp$ph_plot
 ```
-
+\newpage
 #### $\sigma = 0.30$
 
 ```{r, fig.cap="\\label{fig_ex_1_41}Plot of the simulation realizations with sigma = 0.30."}
@@ -197,7 +211,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_42}Phase plot of the simulation with sigma = 0.30."}
 tmp$ph_plot
 ```
-
+\newpage
 #### $\sigma = 0.40$
 
 ```{r, fig.cap="\\label{fig_ex_1_51}Plot of the simulation realizations with sigma = 0.40."}
@@ -208,7 +222,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_52}Phase plot of the simulation with sigma = 0.40."}
 tmp$ph_plot
 ```
-
+\newpage
 #### Comment on the effect of adding noise to the equations
 \begin{itemize}
 \item 
@@ -376,6 +390,7 @@ fit <- model$estimate(data)
 ```
 ```{r}
 analyzeFit(fit, plotit = FALSE)
+summary(fit, extended = TRUE)
 ```
 
 
@@ -385,7 +400,10 @@ analyzeFit(fit, plotit = FALSE)
 analyzeFit(fit, plotit = FALSE)
 ```
 
-Issue: Ria is binding
+The optimization procedure works out without any problems, but if we look at the extended summary of the fit then dPen/dPar is rather large for one of the parameters. What does this mean and how to fix the associated problem?
+
+
+Issue: Ria  and Ti0 are binding
 
 see the manuel and fix the fix
 ```{r}
@@ -402,7 +420,7 @@ model.Ti$addObs(yTi ~ Ti)
 ## Set the variance of the measurement error
 model.Ti$setVariance(yTi ~ exp(e11))
 ## Set the initial value (for the optimization) of the value of the state at the starting time point
-model.Ti$setParameter(  Ti0 = c(init=15  ,lb=0     ,ub=25 ) )
+model.Ti$setParameter(  Ti0 = c(init=15  ,lb=0     ,ub=35 ) )
 ## Set the initial value for the optimization
 model.Ti$setParameter(  Ci = c(init=1   ,lb=1E-5  ,ub=20 ) )
 model.Ti$setParameter( Ria = c(init=5   ,lb=1     ,ub=100) )
@@ -414,6 +432,7 @@ fit.Ti <- model.Ti$estimate(data)
 
 ```{r}
 analyzeFit(fit.Ti, plotit = FALSE)
+summary(fit.Ti, extended = TRUE)
 ```
 
 
