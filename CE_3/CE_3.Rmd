@@ -102,6 +102,7 @@ delta <- 2^-9
 sigma <- 0
 T <- 100
 t <- seq(from = 0, to = T, by = delta)
+init_values = c(-1.9, 1.2)
 ```
 
 Equation 2a and 2b from the description have been discretized and they are showed in eqn. \ref{eqn_1_1}.
@@ -117,6 +118,8 @@ The initial parameters for this diffusion process are given in eqn. \ref{eqn_1_2
 
 \begin{equation}
 \begin{aligned}
+Y_0^1 &= `r init_values[1]`\\
+Y_0^2 &= `r init_values[2]`\\
 \theta_{1,2,3,4} &= [`r Theta[1]`,\,`r Theta[2]`,\,`r Theta[3]`,\,`r Theta[4]`] \\
 \Delta &= `r delta` \\
 \sigma &= `r sigma` \\
@@ -167,6 +170,8 @@ model_func <- function(sigma, delta, t, Theta, init_values) {
   return(list("sim" = data, "re_plot" = re_plot, "ph_plot" = ph_plot))
 }
 ```
+The relizations of $Y_k^1$ and $Y_k^2$ wrt. time and phase plots of $Y_k^1$ and $Y_k^2$ are constructed for different $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
+
 \newpage
 #### $\sigma = 0.00$
 
@@ -178,6 +183,8 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_12}Phase plot of the simulation with sigma = 0.0."}
 tmp$ph_plot
 ```
+$\sigma = 0.0$ returns a stable cyclic system. It takes $\approx10$ time steps for the system to converge to its cyclic pattern. The $\approx10$ time steps will be the same for all simulations. This is caused by the intial parameters of $Y_0^1$ and $Y_0^2$.
+
 \newpage
 #### $\sigma = 0.10$
 
@@ -189,6 +196,8 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_22}Phase plot of the simulation with sigma = 0.10."}
 tmp$ph_plot
 ```
+Changing $\sigma$ to $0.10$ does not make a huge visual effect on the realizations. But it is possible to see the change in the phase plot. It is possible to see a "thicker line" in the lower left corner, which indicates that the change in $\sigma$ impact $Y_k^2$ the most for $Y_k^1$ values in the range $[-1.75;\,0.5]$.
+
 \newpage
 #### $\sigma = 0.20$
 
@@ -200,6 +209,9 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_32}Phase plot of the simulation with sigma = 0.20."}
 tmp$ph_plot
 ```
+
+Changing $\sigma$ to $0.20$ does make an effect in both the realizations and in the phase plot. The time sereis still needs $\approx10$ time steps to converge to its normal cyclic pattern. The pattern changes dramatically after that for some cycles, back to normal and then back to the abnormal pattern agian. The cahnge in $\sigma$ from $0.10$ to $0.20$ increase the effect of the wiener process.
+
 \newpage
 #### $\sigma = 0.30$
 
@@ -211,6 +223,8 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_42}Phase plot of the simulation with sigma = 0.30."}
 tmp$ph_plot
 ```
+Changing $\sigma$ from $0.20$ to $0.30$ gives more less the same illustrations as before. It is noticable to see a greater variance $Y_k^2$ when $Y_k^1$ is in the range $[-1.75;\,1.5]$.
+
 \newpage
 #### $\sigma = 0.40$
 
@@ -222,19 +236,32 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_52}Phase plot of the simulation with sigma = 0.40."}
 tmp$ph_plot
 ```
+For $\sigma = 0.40$ the changes between the normal cyclic pattern and the abnormal pattern is changing more frequently.
+
+The length of the abnormal cycles has great influce of the amplitude of the time series. The amplitudes are more similar to the normal pattern when the abnormal pattern is short. For longer peroid of abnormal pattern entail smaller amplitudes. The smaller amplitudes creates more cycles in the lower rigth corner of the phase plot.
+
 \newpage
 #### Comment on the effect of adding noise to the equations
 \begin{itemize}
-\item 
+\item The first and most noticeable visual change by increasing the noise ($\sigma$) is the amplitude and the nnumber of cycles in the abnormal pattern. Those effecting the "number of cycles" in the abnormal pattern where greater values of $\sigma$ ential more frequent change between the normal pattern and the abnormal pattern.
+\item A greater value of $\sigma$ has a small impact of the effected range of $Y_k^1$. The effect range of $Y_k^1$ is for all four simulation more less the given range $[-1.75;\,1.5]$. Where the effect range of $Y_k^2$ is increasing in all four simulations.
+\item MORE? TODO
 \end{itemize}
 
+\newpage
 ### Question 1b
+```{r}
+grid <- 100
+```
+
+The same function (`model_func()`) has been applied to create the simulations for given values of $\sigma$.
+The `stat_bin2d(bins=``r grid``)` function has been used to create the `r grid`x`r grid`-grid in the phase plot in order to count the number of trajectories in each cell.
+
+The simulated phase plots of $Y_k^1$ and $Y_k^2$ are constructed for following values: $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
 
 #### $\sigma = 0.10$
 
 ```{r, fig.cap="\\label{fig_ex_1b_1}Phase plot of the simulation with sigma = 0.10."}
-grid <- 100
-
 tmp <- model_func(sigma = 0.1, delta = delta, t = t, Theta = Theta, init_values = c(-1.9, 1.2))
 #
 ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) + 
@@ -243,7 +270,7 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
   theme_TS()
 ```
 
-
+\newpage
 #### $\sigma = 0.20$
 
 ```{r, fig.cap="\\label{fig_ex_1b_2}Phase plot of the simulation with sigma = 0.20."}
@@ -255,6 +282,7 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
   theme_TS()
 ```
 
+\newpage
 #### $\sigma = 0.30$
 
 ```{r, fig.cap="\\label{fig_ex_1b_3}Phase plot of the simulation with sigma = 0.30."}
@@ -266,6 +294,7 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
   theme_TS()
 ```
 
+\newpage
 #### $\sigma = 0.40$
 
 ```{r, fig.cap="\\label{fig_ex_1b_4}Phase plot of the simulation with sigma = 0.40."}
@@ -280,7 +309,9 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
 
 #### Which extra information does the plot contain, compared to the standard phase-plot?
 \begin{itemize}
-\item 
+\item Figure \ref{fig_ex_1_52} and figure \ref{fig_ex_1b_4} illustrates the same phase plot with same value of $\sigma$. Figure \ref{fig_ex_1b_4} has added another dimension which adds additional value to the plot compared to figure \ref{fig_ex_1_52}.
+\item It is much easier to see where the system spent the most of its time when counting the number of trajectories in each cell. 
+\item MORE? TODO
 \end{itemize}
 
 
@@ -298,9 +329,11 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
 
 
 
+\newpage
+## Part 2: Models for the heat dynamics of a high performance test building
 
-## Part 2: 
 ### Data
+
 ```{r}
 rm(list = c("tmp","delta","sigma","grid","T","t","Theta","model_func"))
 
@@ -326,24 +359,41 @@ data$timedate <- asP(data$timedate)
 data$t <- asHours(data$timedate-data$timedate[1])
 ```
 
+The provided data has following properties:
+\begin{itemize}
+\item $timedate$ The time of the sample in UTC.
+\item $TiE$ The indoor air temperature of the East room $\left[^{ \circ }C \right]$.
+\item $TiW$ The indoor air temperature of the West room $\left[^{ \circ }C \right]$.
+\item $Ta$ The ambient temperature $\left[^{ \circ }C \right]$.
+\item $Gv$ The solar radiation on a vertical surface facing south $\left[ \frac{kW}{m^2}\right]$. 
+\item $PhE$ The power of the heater in the East room $\left[kW\right]$.
+\item $PhW$ The power of the heater in the West room $\left[kW\right]$.
+\end{itemize}
+The sample perid is $10 \left[min\right]$.
 
-describe the data
 ### Question 2a
+Questions 2a focus at the East room and uses $TiE$ as input variable $yTi$ and $TiW$ as target variable $Tn$.
+
+The script `fitmodel.R` has been implemented step by step in the following sections.
+
 #### 1. Step
-```{r}
+
+Figure \ref{fig_ex_2_1} shows 
+
+```{r, fig.cap="\\label{fig_ex_2_1}Plot of the simulation realizations with sigma = 0.0."}
 p1 <- ggplot2::ggplot(data) + 
   ggplot2::geom_line(aes(x = timedate, y = Ph, color = "Ph"), alpha = 1/2) +
-  labs(x = "", y = "", color = "") +
+  labs(x = "", y = "[kW]", color = "") +
   theme_TS() +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 
 p2 <- ggplot2::ggplot(data) + 
-  ggplot2::geom_line(aes(x = timedate, y = Ta, color = "TA"), alpha = 1/2) +
+  ggplot2::geom_line(aes(x = timedate, y = Ta, color = "Ta"), alpha = 1/2) +
   ggplot2::geom_line(aes(x = timedate, y = yTi, color = "yTi"), alpha = 1/2) +
   ggplot2::geom_line(aes(x = timedate, y = Tn, color = "Tn"), alpha = 1/2) +
-  labs(x = "", y = "", color = "") +
+  labs(x = "", y = "[deg. C]", color = "") +
   ylim(0, 45) +
   theme_TS() +
   theme(axis.title.x=element_blank(),
@@ -353,11 +403,13 @@ p2 <- ggplot2::ggplot(data) +
 
 p3 <- ggplot2::ggplot(data) + 
   ggplot2::geom_line(aes(x = timedate, y = Gv, color = "Gv"), alpha = 1/2) +
-  labs(x = "timedate", y = "", color = "") +
+  labs(x = "timedate", y = "[kW/m2]", color = "") +
   theme_TS()
 
 multiplot(p1, p2, p3, cols=1)
 ```
+
+\newpage
 #### 2. Step
 
 
@@ -365,7 +417,7 @@ figure \ref{}
 
 adasd
 
-```{r}
+```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Fit a SDE model for the heat dynamics of the East room
 ## Generate a new object of class ctsm
 library(ctsmr)
@@ -388,13 +440,16 @@ model$setParameter( e11 = c(init=-1  ,lb=-50   ,ub=10 ) )
 ## Run the parameter optimization
 fit <- model$estimate(data)
 ```
+
+
+
 ```{r}
 analyzeFit(fit, plotit = FALSE)
-summary(fit, extended = TRUE)
+#summary(fit, extended = TRUE)
 ```
 
 
-
+\newpage
 #### 3. Step
 ```{r}
 analyzeFit(fit, plotit = FALSE)
@@ -406,9 +461,7 @@ The optimization procedure works out without any problems, but if we look at the
 Issue: Ria  and Ti0 are binding
 
 see the manuel and fix the fix
-```{r}
-##----------------------------------------------------------------
-
+```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Be a bit smart and do the same in a function, see functions/Ti.R
 model.Ti <- ctsm()
 ## Add a system equation and thereby also a state
@@ -432,10 +485,10 @@ fit.Ti <- model.Ti$estimate(data)
 
 ```{r}
 analyzeFit(fit.Ti, plotit = FALSE)
-summary(fit.Ti, extended = TRUE)
+#summary(fit.Ti, extended = TRUE)
 ```
 
-
+\newpage
 #### 4. Step
 
 One-step ahead residuals
@@ -619,7 +672,7 @@ multiplot(p1, p2, p3, p4, p5, cols=1)
 
 figure \ref{} new
 
-```{r}
+```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
 model.TiTm <- ctsm()
 ## Add a system equation and thereby also a state
@@ -650,7 +703,7 @@ fit.TiTm <- model.TiTm$estimate(data)
 analyzeFit(fit.TiTm, plotit = FALSE)
 ```
 
-
+\newpage
 #### 6. Step
 
 ```{r}
@@ -887,7 +940,7 @@ Describe the good way to implement it...!
 
 
 what is Aw, Gv and p.. must
-```{r, echo = TRUE}
+```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
 model.TiTm_2b <- ctsm()
 ## Add a system equation and thereby also a state
@@ -1002,7 +1055,7 @@ data$t <- asHours(data$timedate-data$timedate[1])
 ```
 
 
-```{r, echo = TRUE}
+```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
 model.TiTm_2c <- ctsm()
 ## Add a system equation and thereby also a state
@@ -1054,9 +1107,6 @@ prm$fit.TiTm_2c$loglik <- fit.TiTm_2c$loglik
 \item Question 2c: `r prm$fit.TiTm_2c$Cm + prm$fit.TiTm_2c$Ci`
 \end{itemize}
 \end{itemize}
-
-
-
 
 ### Question 2d
 Not considered due to time.
