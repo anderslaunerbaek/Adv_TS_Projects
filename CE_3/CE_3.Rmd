@@ -372,15 +372,20 @@ The provided data has following properties:
 The sample perid is $10 \left[min\right]$.
 
 ### Question 2a
-Questions 2a focus at the East room and uses $TiE$ as input variable $yTi$ and $TiW$ as target variable $Tn$.
+Question 2a focus at the East room and uses $TiE$ as input variable $yTi$ and $TiW$ as target variable $Tn$.
 
 The script `fitmodel.R` has been implemented step by step in the following sections.
 
 #### 1. Step
 
-Figure \ref{fig_ex_2_1} shows 
+Figure \ref{fig_ex_2_1} shows the interesting recorded time series in three subplots:
+\begin{itemize}
+\item A step seqence which tells when the heater is on $Ph$ in the east room.
+\item The ambient temperature $Tn$, the indoor air temperature in the east room $yTi$ and the indoor air temperature in the west room $Ta$.
+\item The solar radiation on a vertical surface facing south $Gv$.
+\end{itemize}
 
-```{r, fig.cap="\\label{fig_ex_2_1}Plot of the simulation realizations with sigma = 0.0."}
+```{r, fig.cap="\\label{fig_ex_2_1}Plot of the captured time series."}
 p1 <- ggplot2::ggplot(data) + 
   ggplot2::geom_line(aes(x = timedate, y = Ph, color = "Ph"), alpha = 1/2) +
   labs(x = "", y = "[kW]", color = "") +
@@ -409,13 +414,23 @@ p3 <- ggplot2::ggplot(data) +
 multiplot(p1, p2, p3, cols=1)
 ```
 
+It is possible to see how the solor radiation, on surface facing south, increases the temperatures and the pattern for the heater in figure \ref{fig_ex_2_1}. 
+
 \newpage
 #### 2. Step
 
+There has been implmeneted the most simple model of the system in step 2. 
 
-figure \ref{}
+Equantion \ref{eq_2_2a_1} and eqn. \ref{eq_2_2a_2} shows the system eqn. and measurement eqn. respectively.
 
-adasd
+\begin{equation}
+dT_i=\left( \frac{1}{R_{ia}C_i}\left(T_a-T-i \right) +\frac{1}{C_i}\Phi_h  \right)dt+\sigma_id\omega_i
+\label{eq_2_2a_1}
+\end{equation}
+\begin{equation}
+T_{t_k} = T_{i,\,t_k}+\epsilon_{t_k}
+\label{eq_2_2a_2}
+\end{equation}
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Fit a SDE model for the heat dynamics of the East room
@@ -441,26 +456,18 @@ model$setParameter( e11 = c(init=-1  ,lb=-50   ,ub=10 ) )
 fit <- model$estimate(data)
 ```
 
-
-
-```{r}
-analyzeFit(fit, plotit = FALSE)
-#summary(fit, extended = TRUE)
-```
-
-
-\newpage
 #### 3. Step
+
+Below is the summary of the fit and the estimated parameters.
+
 ```{r}
 analyzeFit(fit, plotit = FALSE)
 ```
 
-The optimization procedure works out without any problems, but if we look at the extended summary of the fit then dPen/dPar is rather large for one of the parameters. What does this mean and how to fix the associated problem?
+The optimization procedure works out without any problems but we compare the value in $dF/dPar$ with the value in $dPen/dPar$. If the values are significantly different, the particular initial parameter value it is close to one of its limits. A solution to this is to loosen the particular initial parameter value. \footnote{P.15 http://ctsm.info/pdfs/ctsmr-reference.pdf}
 
+I fixed this issue by increasing the limits on both of the following two parameters $Ria$ and $Ti0$. Then estimate the model agian.
 
-Issue: Ria  and Ti0 are binding
-
-see the manuel and fix the fix
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Be a bit smart and do the same in a function, see functions/Ti.R
 model.Ti <- ctsm()
@@ -483,46 +490,67 @@ model.Ti$setParameter( e11 = c(init=-1  ,lb=-50   ,ub=10 ) )
 fit.Ti <- model.Ti$estimate(data)
 ```
 
+
 ```{r}
 analyzeFit(fit.Ti, plotit = FALSE)
 #summary(fit.Ti, extended = TRUE)
 ```
+It is possible to see the new estimated parameters in the output above. 
+The estimated values of the two affected parameters are now $Ti0 = 24.502$, which was close to a initial binding value for $Ti0$, and $Ria = 26.260$ which is roughly about twice as munch as the inital upper limit value for $Ria$. 
+
+By fixing the initiallimit issues also increased the loglikelihood significantly and decreased the correlations among the parameters which is desirable.
 
 \newpage
 #### 4. Step
-
-One-step ahead residuals
-
-```{r}
-## Calculate the one-step predictions of the state
-pred <- predict(fit)
-## Calculate the residuals and put them with the data
+The estimated model is analyzed in step 4. We are interested in the residuals of the one step ahead prediction.
+```{r, echo=TRUE}
+# Calculate the one-step predictions of the state
+pred <- predict(fit.Ti)
+# Extract the estimated value of yTi
 data$yTiHat <- pred[[1]]$output$pred$yTi
+# Calculate the residuals and add them to the data frame
 data$residuals <- data$yTi - data$yTiHat
 ```
 
 ##### Time Series of the residuals
-```{r}
+
+Figure \ref{fig_ex_2b_1} shows a time serie plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is some systematic behavoir left.
+
+```{r, fig.cap="\\label{fig_ex_2b_1}Time serie plot of the residuals."}
 ggplot(data) +
   geom_line(aes(x = timedate, y = residuals, color = "Residuals"), alpha = 1/2) +
   labs(x = "timedate", y = "", color = "") +
   theme_TS()
 ```
+
 ##### Distribution of the residuals
-```{r}
+
+Figure \ref{fig_ex_2b_2} shows a histogram of the residuals. This plot supports the statement from above that the residuals is not gaussian distributed and therefore not white noise.
+
+```{r, fig.cap="\\label{fig_ex_2b_2}Histogram of the residuals."}
+
+data$gauss <- rnorm(nrow(data), mean = 0, sd = 1)
+
 ggplot(data) +
+  #eom_histogram(aes(x = gauss, color = "Gauss"), alpha = 1/2) +
   geom_histogram(aes(x = residuals, color = "Residuals"), alpha = 1/2) +
   labs(x = "epsilon", y = "frequency", color = "") +
   theme_TS()
 ```
 
-##### ACF of the residuals
-
-```{r}
+##### ACF and PACF of the residuals
+Figure \ref{fig_ex_2b_3} and figure \ref{fig_ex_2b_4} shows the ACF and the PACF of the residuals.
+```{r, fig.cap="\\label{fig_ex_2b_3}ACF of the residuals."}
 lags_acf <- data.frame(lag = acf(data$residuals, plot = F, lag.max=8*24)$lag,
                        acf = acf(data$residuals, plot = F, lag.max=8*24)$acf,
                        confi = qnorm((1 + 0.95)/2)/sqrt(length(data$residuals)), # from introduction to times series
                        zero = 0)
+
+lags_pacf <- data.frame(lag = pacf(data$residuals, plot = F, lag.max=8*24)$lag,
+                       acf = pacf(data$residuals, plot = F, lag.max=8*24)$acf,
+                       confi = qnorm((1 + 0.95)/2)/sqrt(length(data$residuals)), # from introduction to times series
+                       zero = 0)
+
 #
 ggplot() +
   geom_segment(data = lags_acf,
@@ -550,9 +578,38 @@ ggplot() +
 ```
 
 
+```{r, fig.cap="\\label{fig_ex_2b_4}PACF of the residuals."}
+ggplot() +
+  geom_segment(data = lags_pacf,
+               aes(x = lag, y = zero,
+                   xend = lag, yend = acf,
+                   colour = "PACF"),
+               alpha = 1/2) +
+  #
+  geom_segment(aes(x = min(lags_acf$lag),
+                   xend = max(lags_acf$lag),
+                   y = lags_acf$confi,
+                   yend = lags_acf$confi,
+                   colour = "95%"),
+               linetype = 2) +
+  geom_segment(aes(x = min(lags_acf$lag),
+                   xend = max(lags_acf$lag),
+                   y = -lags_acf$confi,
+                   yend = -lags_acf$confi,
+                   colour = "95%"),
+               linetype = 2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks = seq(from = 0, to = max(lags_acf$lag), by = 10)) + 
+  labs(x = "lag", y = "value", color = "") +
+  theme_TS()
+```
+
+Both the ACF and the PACF of the residuals shows some correlation in the residuals, which indicates that the model can be improved.
+
 ##### Periodogram of the residuals
 
-```{r}
+Figure \ref{fig_ex_2b_5} shows the periodogram of the residuals.
+```{r, fig.cap="\\label{fig_ex_2b_5}Periodogram of the residuals."}
 # The periodogram is the estimated energy spectrum in the signal
 tmp <- spec.pgram(data$residuals, plot = FALSE)
 spec_pgram_df <- data.frame(freq = tmp$freq,
@@ -566,8 +623,11 @@ ggplot(spec_pgram_df) +
 
 
 
-##### Commulated Periodogram of the residuals
-```{r}
+##### Cumulated periodogram of the residuals
+
+Figure \ref{fig_ex_2b_6} shows the cumulated periodogram of the residuals. It is possible to see that the residuals are dependent of each other, which identicate that there is still unexpolred systematic behavoir left in the residuals. The residuals will be on the diagonal in cumulated periodogram if they are white noise.
+
+```{r, fig.cap="\\label{fig_ex_2b_6}Cumulated periodogram of the residuals."}
 # function ----
 cpgram_func <- function (ts, taper = 0.1) {
     
@@ -606,19 +666,22 @@ ggplot() +
   geom_segment(aes(x = cpgram$confi_upper[1],
                    y = cpgram$confi_upper[3],
                    xend = cpgram$confi_upper[2],
-                   yend = cpgram$confi_upper[4], colour = "CI"),
+                   yend = cpgram$confi_upper[4], colour = "95%CI"),
                alpha = 1/2) +
   geom_segment(aes(x = cpgram$confi_lower[1],
                    y = cpgram$confi_lower[3],
                    xend = cpgram$confi_lower[2],
-                   yend = cpgram$confi_lower[4], colour = "CI"),
+                   yend = cpgram$confi_lower[4], colour = "95%CI"),
                alpha = 1/2) +
   labs(x = "frequency", y = "", color = "") +
   theme_TS()
 ```
 
 ##### combined
-```{r}
+
+Figure \ref{fig_ex_2b_7} shows
+
+```{r, fig.cap="\\label{fig_ex_2b_7}Conbined plot with the residuals, the heater, measured and predicted temperature, ect.."}
 data$zero <- 0
 p1 <- ggplot(data) +
   geom_line(aes(x = timedate, y = residuals, color = "Residuals"), alpha = 1/2) +
