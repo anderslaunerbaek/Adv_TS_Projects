@@ -105,7 +105,7 @@ t <- seq(from = 0, to = T, by = delta)
 init_values = c(-1.9, 1.2)
 ```
 
-Equation 2a and 2b from the description have been discretized and they are showed in eqn. \ref{eqn_1_1}.
+Equation 2a and 2b from the description have been discretized and showed in eqn. \ref{eqn_1_1}.
 \begin{equation}
 \begin{aligned}
 Y_{n+1}^1 &= Y_n^1+ \theta_3\left(Y_n^1 + Y_n^2 - \frac{1}{3}\left(Y_n^1  \right)^3 + \theta_4  \right)\Delta+\sigma\Delta W^1_{n+1} \\
@@ -132,8 +132,9 @@ t &= 1:\Delta:T \\
 
 
 ### Question 1a
-It is possible to change the process by changes the value of $\sigma$. An increase in $\sigma$ will provide a bigger variation in the Wiener process. Below there have been plotted realizations of $Y_k^1$ and $Y_k^2$ wrt. time and a phase plot of $Y_k^1$ and $Y_k^2$. 
-The following function `model_func()` has been used to plot 
+It is possible to change the process by changes the value of $\sigma$. An increase in $\sigma$ will increase the effect of the Wiener process. There has been plotted realizations of $Y_k^1$ and $Y_k^2$ wrt. time and a phase plot of $Y_k^1$ and $Y_k^2$ below. 
+
+The following function `model_func()` has been used to create the plot:
 
 ```{r, echo=TRUE}
 # function ----
@@ -170,12 +171,13 @@ model_func <- function(sigma, delta, t, Theta, init_values) {
   return(list("sim" = data, "re_plot" = re_plot, "ph_plot" = ph_plot))
 }
 ```
-The realizations of $Y_k^1$ and $Y_k^2$ wrt. time and phase plots of $Y_k^1$ and $Y_k^2$ are constructed for different $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
+The realizations of $Y_k^1$ and $Y_k^2$ wrt. time and phase plots of $Y_k^1$ and $Y_k^2$ are constructed for following values: $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
 
 \newpage
 #### $\sigma = 0.00$
 
 ```{r, fig.cap="\\label{fig_ex_1_11}Plot of the simulation realizations with sigma = 0.0."}
+init_values = c(-1.9, 1.2)
 tmp <- model_func(sigma = 0.0, delta = delta, t = t, Theta = Theta, init_values = c(-1.9, 1.2))
 tmp$re_plot
 ```
@@ -183,7 +185,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_12}Phase plot of the simulation with sigma = 0.0."}
 tmp$ph_plot
 ```
-$\sigma = 0.0$ returns a stable cyclic system. It takes $\approx10$ time steps for the system to converge to its cyclic pattern. The $\approx10$ time steps will be the same for all simulations. This is caused by the initial parameters of $Y_0^1$ and $Y_0^2$.
+$\sigma = 0.0$ returns a stable cyclic system. It takes $\approx10$ time steps for the system to converge to its cyclic pattern. The $\approx10$ time steps to find its cyclic pattern is the same for all simulations. This is caused by the initial parameters of $Y_0^1=`r init_values[1]`$ and $Y_0^2=`r init_values[2]`$.
 
 \newpage
 #### $\sigma = 0.10$
@@ -196,7 +198,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_22}Phase plot of the simulation with sigma = 0.10."}
 tmp$ph_plot
 ```
-Changing $\sigma$ to $0.10$ does not make a huge visual effect on the realizations. But it is possible to see the change in the phase plot. It is possible to see a "thicker line" in the lower left corner, which indicates that the change in $\sigma$ impact $Y_k^2$ the most for $Y_k^1$ values in the range $[-1.75;\,0.5]$.
+Changing $\sigma$ to $0.10$ does not make a huge visual effect on the realizations. But it is possible to see the change in the phase plot. It is possible to see a "thicker line" in the lower left corner, which indicates that the change in $\sigma$ impacts $Y_k^2$ the most in the range of $[-1.75;\,0.5]$ for  $Y_k^1$.
 
 \newpage
 #### $\sigma = 0.20$
@@ -210,7 +212,7 @@ tmp$re_plot
 tmp$ph_plot
 ```
 
-Changing $\sigma$ to $0.20$ does make an effect in both the realizations and in the phase plot. The time sereis still need $\approx10$ time steps to converge to its normal cyclic pattern. The pattern changes dramatically after that for some cycles, back to normal and then back to the abnormal pattern again. The change in $\sigma$ from $0.10$ to $0.20$ increase the effect of the Wiener process.
+Changing $\sigma$ to $0.20$ does make an effect in both the realizations and in the phase plot. The time series still need $\approx10$ time steps to converge to its normal cyclic pattern. The pattern changes dramatically after that for some cycles, then back to normal and then back to the abnormal pattern again. The change in $\sigma$ from $0.10$ to $0.20$ scales the effect of the Wiener process.
 
 \newpage
 #### $\sigma = 0.30$
@@ -223,7 +225,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_42}Phase plot of the simulation with sigma = 0.30."}
 tmp$ph_plot
 ```
-Changing $\sigma$ from $0.20$ to $0.30$ gives more less the same illustrations as before. It is noticeable to see a greater variance $Y_k^2$ when $Y_k^1$ is in the range $[-1.75;\,1.5]$.
+Changing $\sigma$ from $0.20$ to $0.30$ gives more or less the same cyclic behaviour as before. It is noticeable to see a greater variance of $Y_k^2$ when $Y_k^1$ is in the range $[-1.75;\,1.5]$ in the lower left corner.
 
 \newpage
 #### $\sigma = 0.40$
@@ -236,16 +238,16 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_52}Phase plot of the simulation with sigma = 0.40."}
 tmp$ph_plot
 ```
-For $\sigma = 0.40$ the changes between the normal cyclic pattern and the abnormal pattern is changing more frequently.
+The changes between the normal cyclic pattern and the abnormal pattern is changing more frequently when $\sigma$ is $0.40$.
 
-The length of the abnormal cycles has great influence of the amplitude of the time series. The amplitudes are more similar to the normal pattern when the abnormal pattern is short. For longer period of abnormal pattern entail smaller amplitudes. The smaller amplitudes creates more cycles in the lower right corner of the phase plot.
+The length of the abnormal cycles has great influence of the amplitude of the time series. Longer periods of abnormal pattern entails smaller amplitudes in the realizations and creates smaller and more cycles in the lower right corner of the phase plot.
 
 \newpage
 #### Comment on the effect of adding noise to the equations
 \begin{itemize}
-\item The first and most noticeable visual change by increasing the noise ($\sigma$) is the amplitude and the number of cycles in the abnormal pattern. Those effecting the "number of cycles" in the abnormal pattern where greater values of $\sigma$ entail more frequent change between the normal pattern and the abnormal pattern.
-\item A greater value of $\sigma$ has a small impact of the effected range of $Y_k^1$. The effect range of $Y_k^1$ is for all four simulation more less the given range $[-1.75;\,1.5]$. Where the effect range of $Y_k^2$ is increasing in all four simulations.
-\item MORE? TODO
+\item The first and most noticeable visual change by increasing the noise ($\sigma$) is the amplitude and the number of cycles in the abnormal pattern.
+\item Increasing the value of $\sigma$ entails more frequent changes between the normal pattern and the abnormal pattern.
+\item Increasing the value of $\sigma$ entails only changes in the lower part of the phase cycles.
 \end{itemize}
 
 \newpage
@@ -254,10 +256,10 @@ The length of the abnormal cycles has great influence of the amplitude of the ti
 grid <- 100
 ```
 
-The same function (`model_func()`) has been applied to create the simulations for given values of $\sigma$.
+The same function (`model_func()`) has been applied to create the simulations for the given values of $\sigma$.
 The `stat_bin2d(bins=``r grid``)` function has been used to create the `r grid`x`r grid`-grid in the phase plot in order to count the number of trajectories in each cell.
 
-The simulated phase plots of $Y_k^1$ and $Y_k^2$ are constructed for following values: $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
+The simulated phase plot of $Y_k^1$ and $Y_k^2$ are constructed for following values: $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
 
 #### $\sigma = 0.10$
 
@@ -310,24 +312,9 @@ ggplot(tmp$sim, aes(x = Y_1, y = Y_2)) +
 #### Which extra information does the plot contain, compared to the standard phase-plot?
 \begin{itemize}
 \item Figure \ref{fig_ex_1_52} and figure \ref{fig_ex_1b_4} illustrates the same phase plot with same value of $\sigma$. Figure \ref{fig_ex_1b_4} has added another dimension which adds additional value to the plot compared to figure \ref{fig_ex_1_52}.
-\item It is much easier to see where the system spent the most of its time when counting the number of trajectories in each cell. 
-\item MORE? TODO
+It is much easier to see where the system spent the most of its time when counting the number of trajectories in each cell. 
+\item It is then possible to observe for which values of $Y_k^1$ and $Y_k^2$ the scaled Wiener process effects the system ans where the process does not effect the system.
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 \newpage
 ## Part 2: Models for the heat dynamics of a high performance test building
@@ -371,7 +358,7 @@ The provided data has following properties:
 \end{itemize}
 The sample period is $10 \left[min\right]$.
 
-\textbf{NB:} It is worth mention that there has not been been considered any kind of outlier detection prior to model fitting. But there is some "dramatic" behaviour around mid day between Oct. 12 and Oct. 13.
+\textbf{NB:} It is worth mention that there has not been been considered any kind of outlier detection prior to model fitting. But there is some "dramatic" behaviour around midday between Oct. 12 and Oct. 13.
 
 ### Question 2a
 Question 2a focus at the East room and uses $TiE$ as input variable $yTi$ and $TiW$ as target variable $Tn$.
@@ -416,7 +403,7 @@ p3 <- ggplot2::ggplot(data) +
 multiplot(p1, p2, p3, cols=1)
 ```
 
-It is possible to see how the Solar radiation, on surface facing south, increases the temperatures and the pattern for the heater in figure \ref{fig_ex_2_1}. 
+It is possible to see how the solar radiation, on surface facing south, increases the temperatures and changes the pattern of the heater in figure \ref{fig_ex_2_1}. 
 
 \newpage
 #### 2. Step
@@ -460,15 +447,15 @@ fit <- model$estimate(data)
 
 #### 3. Step
 
-Below is the summary of the fit and the estimated parameters.
+Below is the summary of the estimated parameters.
 
 ```{r}
 analyzeFit(fit, plotit = FALSE)
 ```
 
-The optimization procedure works out without any problems but we compare the value in $dF/dPar$ with the value in $dPen/dPar$. If the values are significantly different, the particular initial parameter value it is close to one of its limits. A solution to this is to loosen the particular initial parameter value. \footnote{P.15 http://ctsm.info/pdfs/ctsmr-reference.pdf}
+The optimization procedure works out without any problems but there are some issues in the $dF/dPar$ and $dPen/dPar$ columns. If the values are significantly different, the particular initial parameter value it is close to one of its limits. A solution to this is to loosen the particular initial parameter value\footnote{P.15 http://ctsm.info/pdfs/ctsmr-reference.pdf}.
 
-I fixed this issue by increasing the limits on both of the following two parameters $Ria$ and $Ti0$. Then estimate the model again.
+The issue is fixed by increasing the limits on both of the following two parameters $Ria$ and $Ti0$, and then reestimate the model.
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Be a bit smart and do the same in a function, see functions/Ti.R
@@ -498,13 +485,13 @@ analyzeFit(fit.Ti, plotit = FALSE)
 #summary(fit.Ti, extended = TRUE)
 ```
 It is possible to see the new estimated parameters in the output above. 
-The estimated values of the two affected parameters are now $Ti0 = 24.502$, which was close to a initial binding value for $Ti0$, and $Ria = 26.260$ which is roughly about twice as munch as the initial upper limit value for $Ria$. 
+The estimated values of the two affected parameters are now $Ti0 = 24.502$, which was close to a initial upper limit value for $Ti0$, and $Ria = 26.260$ which is roughly about twice as munch as the initial upper limit value for $Ria$. 
 
-By fixing the initial limit issues also increased the log-likelihood significantly and decreased the correlations among the parameters which is desirable.
+By fixing the initial limit issues, the fix also increased the log-likelihood significantly and decreased the correlations among estimated parameters which is desirable.
 
 \newpage
 #### 4. Step
-The estimated model is analysed in step 4. We are interested in the residuals of the one step ahead prediction.
+The estimated model is analysed in step 4. We are interested in the residuals of the one step ahead prediction. There is example of the code chuck which calculates the residuals.
 ```{r, echo=TRUE}
 # Calculate the one-step predictions of the state
 pred <- predict(fit.Ti)
@@ -516,7 +503,7 @@ data$residuals <- data$yTi - data$yTiHat
 
 ##### Time Series of the residuals
 
-Figure \ref{fig_ex_2b_1} shows a time Series plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is some systematic behaviour left.
+Figure \ref{fig_ex_2b_1} shows a time series plot of residuals from the one step ahead predictions. It is clear to see that the residuals is not white noise. This indicates, that there is still systematic behaviour left in the residuals.
 
 ```{r, fig.cap="\\label{fig_ex_2b_1}Time serie plot of the residuals."}
 ggplot(data) +
@@ -607,7 +594,7 @@ ggplot() +
   theme_TS()
 ```
 
-Both the ACF and the PACF of the residuals shows some correlation in the residuals, which indicates that the model can be improved.
+Both the ACF and the PACF of the residuals shows correlation, which indicates systematic behaviour and hereby possible improvements of the model.
 
 ##### Periodogram of the residuals
 
@@ -628,7 +615,7 @@ ggplot(spec_pgram_df) +
 
 ##### Cumulated periodogram of the residuals
 
-Figure \ref{fig_ex_2b_6} shows the cumulated periodogram of the residuals. It is possible to see that the residuals are dependent of each other, which identicates that there is still unexplored systematic behaviour left in the residuals. The residuals will be on the diagonal in cumulated periodogram if they are white noise.
+Figure \ref{fig_ex_2b_6} shows the cumulated periodogram of the residuals. The cumulated periodogram shows that the residuals are dependent of each other, which indenticates that there is still unexplored systematic behaviour left in the residuals. The residuals are white noise if they follows the diagonal in cumulated periodogram.
 
 ```{r, fig.cap="\\label{fig_ex_2b_6}Cumulated periodogram of the residuals."}
 # function ----
@@ -749,7 +736,7 @@ dT_m&=\left( \frac { 1 }{ R_{ im }C_{ m } } \left( T_{ a }-T_{ m } \right)  \rig
 \end{equation}
 
 
-The new $TiTm$ model has been estimated again and has following estimated parameters: 
+The new $TiTm$ model has been estimated and returned the following summary: 
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
@@ -783,14 +770,14 @@ analyzeFit(fit.TiTm, plotit = FALSE)
 ```
 
 \begin{itemize}
-\item An effect of adding the new state to the system is the increased log-likelihood value. 
+\item One effect of adding the new state to the system is the increased log-likelihood value. 
 \item The $Ria$ parameter has a quiet large p-value but is still significant. The standard error is also quiet large compared to the estimated value of the parameter.
 \end{itemize}
 
 
 \newpage
 #### 6. Step
-The similar one step ahead prediction errors as in step 4. plotted and analysed in step 6.
+The similar residual analysis as in step 4. has been performed for the new model in step 6.
 ```{r}
 ## Calculate the one-step predictions of the state
 pred <- predict(fit.TiTm)
@@ -801,7 +788,7 @@ data$residuals <- data$yTi - data$yTiHat
 
 ##### Time Series of the residuals
 
-Figure \ref{fig_ex_2b_6_1} shows a time series plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is still some systematic behaviour within the residuals.
+Figure \ref{fig_ex_2b_6_1} shows a time series plot of residuals from the one step ahead predictions. The residuals is still not white noise.
 
 ```{r, fig.cap="\\label{fig_ex_2b_6_1}Time serie plot of the residuals."}
 ggplot(data) +
@@ -915,7 +902,7 @@ ggplot(spec_pgram_df) +
 
 Figure \ref{fig_ex_2b_6_6} shows the cumulated periodogram of the residuals.
 
-The all the residuals from the one step ahead prediction errors of the new $TiTm$ model are within the $95\%$ confident bands. This plot illustrates a clear improvement from the simple model $Ti$ (figure \ref{fig_ex_2b_6}) to the extended model $TiTm$ (figure \ref{fig_ex_2b_6_6}). The residuals are closer to the diagonal which is an identification of white noise.
+The all the residuals from the one step ahead prediction of the new $TiTm$ model are within the $95\%$ confidence bands. This plot illustrates a clear improvement from the simple model $Ti$ (figure \ref{fig_ex_2b_6}) to the extended model $TiTm$ (figure \ref{fig_ex_2b_6_6}). The residuals are closer to the diagonal which is an identification of independent residuals (white noise).
 
 ```{r, fig.cap="\\label{fig_ex_2b_6_6}Cumulated periodogram of the residuals."}
 # plot ----
@@ -987,7 +974,7 @@ multiplot(p1, p2, p3, p4, p5, cols=1)
 
 #### 7. Step
 
-There has been performed an log-likelihood-ratio test in step 7 of the two models $Ti$ and $TiTm$. 
+There has been performed a log-likelihood-ratio test of the two models $Ti$ and $TiTm$ in step 7. 
 
 ```{r}
 ## Perform a likelihood ratio test: lambda = lik(smallerModel)/lik(largerModel) ,
@@ -1012,24 +999,22 @@ The p-value of the log-likelihood-ratio test is: $p=`r p_value`$, which tells th
 \begin{itemize}
 \item Discuss the white-noise properties of the (one-step ahead) residuals for model $T_i$.
 \begin{itemize}
-\item By plotting the distribution, ACF and PACF and the cumulated periodogram of the residuals (figure \ref{fig_ex_2b_2}, \ref{fig_ex_2b_3} and \ref{fig_ex_2b_5}) it is possible to conclude that there is  systematic behaviour left in the residuals.
+\item By plotting the distribution, ACF and PACF and the cumulated periodogram of the residuals (figure \ref{fig_ex_2b_2}, \ref{fig_ex_2b_3} and \ref{fig_ex_2b_5}) is it possible to conclude that there is systematic behaviour left in the residuals.
 \end{itemize}
 \item What useful information can be obtained from the time series plots of the residuals and the inputs for model $T_i$?
 \begin{itemize}
 \item The realization of the residuals in figure \ref{fig_ex_2b_1} shows the first property of the residuals. There is to some extent systematic periodic behaviour left in the residuals.
-\item The combined plot (figure \ref{fig_ex_2b_7}) of the residuals and the other time series provides an good overview of the system. It is possible to see when the system struggles to predict the next input for the given state of the system.
-\item It is possible to see where the one step ahead prediction struggles. 
+\item The combined plot (figure \ref{fig_ex_2b_7}) with the residuals and the other time series provides a good overview of the entire system. It is possible to see when the system struggles to predict the next state of the system.
 \end{itemize}
 \item Discuss the white-noise properties of the one-step ahead residuals for model $T_iT_m$.
 \begin{itemize}
-\item The residuals for the $TiTm$ model is much closer to white noise. This can be concluded by considering the plot of the ACF and PACF plots and the cumulated periodogram plot respectively in figure \ref{fig_ex_2b_6_3} and \ref{fig_ex_2b_6_5}. 
+\item The residuals for the $TiTm$ model is much closer to having white noise in its residuals. This can be concluded by considering the plot of the ACF and PACF plots and the cumulated periodogram plot in figure \ref{fig_ex_2b_6_3} and \ref{fig_ex_2b_6_5} respectively. 
 \end{itemize}
 \item What useful information can be obtained from the time series plots of the residuals
 and inputs for model $T_iT_m$?
 \begin{itemize}
 \item The same information as for the $Ti$ model above. 
-\item It is possible to conclude that the solar radiation has an effect on the one step ahead predictions for both models. This conclusion can easily be seen in both figure \ref{fig_ex_2b_7} and figure \ref{fig_ex_2b_6_7}. 
-\item It will therefore make sense to include the solar radiation in both models.of the system.
+\item It is possible to state that the solar radiation ($Gv$) has an effect on the one step ahead predictions for both models. This statement can easily be seen in both figure \ref{fig_ex_2b_7} and figure \ref{fig_ex_2b_6_7}. It will therefore make sense to include the solar radiation in the models of the system.
 \end{itemize}
 \item Based on the likelihood-ratio test is model $T_iT_m$ then to be preferred over model $T_i$?
 \begin{itemize}
@@ -1041,7 +1026,7 @@ and inputs for model $T_iT_m$?
 \newpage
 ### Question 2b
 
-The next improvement is to include the solar radiation $Gv$ in the model, eqn. \ref{eq_2b_b_1} and still use the same measurement eqn. \ref{eq_2_2a_2}. I have chosen the linear interpolation.
+The next improvement is to include the solar radiation $Gv$ in the model, eqn. \ref{eq_2b_b_1} and still use the same measurement eqn. \ref{eq_2_2a_2}. I have chosen the linear interpolation of the implementation of $Gv$.
 
 \begin{equation}
 \begin{aligned}
@@ -1052,9 +1037,9 @@ dT_m&=\left( \frac { 1 }{ R_{ im }C_{ m } } \left( T_{ a }-T_{ m } \right) +\fra
 \end{equation}
 
 
-By implemented the solar radiation ($Gv$) in the system, two additional parameters have been introduced:
+Two additional parameters have been introduced when implementing the solar radiation ($Gv$) in the system:
 \begin{itemize}
-\item The linear interpretation $p$ identifies the ratio in which the inside air temperature or the interior thermal medium will absorb the solar radiation $Gv$.
+\item The interpretation of $p$ is a ratio, which divides the amount of absorbed solar radiation in the inside air temperature and in the interior thermal medium.
 \item $Aw = 7.5+4.8 = 12.3 [m^2]$ which is the effective window area of the building.
 \end{itemize}
 
@@ -1118,8 +1103,8 @@ data$residuals <- data$residuals^2
 \item Findings
 \begin{itemize}
 \item The parameter $Aw$ is given as a constant, which causes the `NA`'s in the summary output. The value of $Aw$ is `r fit.TiTm_2b$xm["Aw"]`. 
-\item The parameter $p$ is estimated to `r round(fit.TiTm_2b$xm["p"],3)`, which tells that the `r round(fit.TiTm_2b$xm["p"] * 100,0)`$\%$ of the solar radiation will be absorbed in the inside air temperature. The remaining `r round((1-fit.TiTm_2b$xm["p"]) * 100,0)`$\%$ will be absorbed by the interior walls and furnitures.
-\item The two realizations in figure \ref{fig_ex_2b_1_6_1} illustrates the squared residuals against $Gv$ of the model which not include the solar radiation and the model which do include the solar radiation, eqn. \ref{eq_2_5a_1} and eqn. \ref{eq_2b_b_1} respectively.
+\item The parameter $p$ is estimated to `r round(fit.TiTm_2b$xm["p"],3)`, which tells that the `r round(fit.TiTm_2b$xm["p"] * 100,0)`$\%$ of the solar radiation will be absorbed in the inside air temperature and the remaining `r round((1-fit.TiTm_2b$xm["p"]) * 100,0)`$\%$ will be absorbed by the interior walls and furnitures.
+\item The two realizations in figure \ref{fig_ex_2b_1_6_1} illustrates the squared residuals against $Gv$ from the model which does not include the solar radiation and from the model which does include the solar radiation, eqn. \ref{eq_2_5a_1} and eqn. \ref{eq_2b_b_1} respectively.
 ```{r, fig.cap="\\label{fig_ex_2b_1_6_1}Ralizations of squared residuals as function of Gv."}
 ggplot(data) +
   geom_line(aes(x = Gv, y = residuals, color = "Residuals^2 TiTm"), alpha = 1/1) +
@@ -1129,12 +1114,12 @@ ggplot(data) +
   theme_TS()
 ```
 
-The amplitudes of the squared residuals of the model (eqn. \ref{eq_2b_b_1}) which include $Gv$ is smaller than the residuals from the model (eqn. \ref{eq_2_5a_1}) which exclude $Gv$. \\
-The summed squared residuals, of the model (eqn. \ref{eq_2b_b_1}), is `r round((sum(data$residuals) - sum(data$residuals_2b)) / sum(data$residuals) * 100,3)`$\%$ lower than the model (eqn. \ref{eq_2_5a_1}), which identicates a better model. This can also be seen their log-likelihoods.
+The amplitudes of the squared residuals of the model (eqn. \ref{eq_2b_b_1}) is smaller than the amplitudes of the residuals from the model (eqn. \ref{eq_2_5a_1}). \\
+The summed squared residuals of the model (eqn. \ref{eq_2b_b_1}) is `r round((sum(data$residuals) - sum(data$residuals_2b)) / sum(data$residuals) * 100,3)`$\%$ lower than the model (eqn. \ref{eq_2_5a_1}), which indenticates a better model. This can also be seen their log-likelihoods.
 \end{itemize}
 \item Likelihood-ratio test
 \begin{itemize}
-\item The model (eqn. \ref{eq_2b_b_1}) has increased the log-likelihoods of `r round((prm$fit.TiTm_2b$loglik - prm$fit.TiTm$loglik) / prm$fit.TiTm_2b$loglik * 100,3)`$\%$ from the model (eqn. \ref{eq_2_5a_1}).
+\item The model (eqn. \ref{eq_2b_b_1}) has increased the log-likelihoods with `r round((prm$fit.TiTm_2b$loglik - prm$fit.TiTm$loglik) / prm$fit.TiTm_2b$loglik * 100,3)`$\%$ compared to the more simple model (eqn. \ref{eq_2_5a_1}).
 \item Likelihood-ratio test\\
 A likelihood-ratio test has been performed in order to validate weather the model (eqn. \ref{eq_2b_b_1}) is better or worse than the model (eqn. \ref{eq_2_5a_1}).
 ```{r}
@@ -1156,12 +1141,12 @@ p_value <- 1 - pchisq(chisqStat, prmDiff)
 
 The p-value from the test is: $p = `r round(p_value,3)`$ which tells that the model, which include the solar radiation, is significant better performing than the model which not include the solar radiation.
 \end{itemize}
-\item Conclusion: The solar radiation should be included in the model.
+\item Conclusion: The solar radiation ($Gv$) should be included in the model.
 \end{itemize}
 
 \newpage
 ### Question 2c
-I decided to use the same model (eqn. \ref{eq_2b_b_1}) and change the input data. The difference between privous two qestions and this is the way to select columns. Examples on selecting correct columns from the csv below:
+I decided to use the same model (eqn. \ref{eq_2b_b_1}) with new input data. The difference between previous two questions and this question is the way of selecting the columns. The two examples on selecting the correct columns from the csv are given below:
 \begin{itemize}
 \item Question 2a and 2b: \emph{data $\leftarrow$ data[,c(1,2,4,5,6,3)]}
 \item Question 2c: \emph{data $\leftarrow$ data[,c(1,3,4,5,7,2)]}
@@ -1180,7 +1165,7 @@ data$timedate <- asP(data$timedate)
 data$t <- asHours(data$timedate-data$timedate[1])
 ```
 
-Estimating the same model has been done after reading the data for the West room. I simply copyied the code chunk from Question 2b. The output from estimated model for the West room is given below.
+Estimating the same model has been done after loading the data for the West room. The code chunk from Question 2b has simply been re-executed. The output from estimated model for the West room is given below:
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
@@ -1235,7 +1220,7 @@ data$residuals <- data$yTi - data$yTiHat
 
 ##### Time Series of the residuals
 
-Figure \ref{fig_ex_2c_1} shows a time series plot of residuals from the one step ahead predictions. It is possible to see some seasonal (season of one day) trend within the residuals which identicates there is systematic behaviour left in the residuals.
+Figure \ref{fig_ex_2c_1} shows a time series plot of residuals from the one step ahead predictions. It is possible to see some seasonal (season of one day) trend within the residuals which indenticates systematic behaviour in the residuals.
 
 ```{r, fig.cap="\\label{fig_ex_2c_1}Time serie plot of the residuals."}
 ggplot(data) +
@@ -1248,7 +1233,7 @@ ggplot(data) +
 \newpage 
 ##### Cumulated periodogram of the residuals
 
-Figure \ref{fig_ex_2c_6} shows the cumulated periodogram of the residuals. The residuals are within the confident bands, but they are wobbling around the diagonal, which can support the fact about a seasonal trend.
+Figure \ref{fig_ex_2c_6} shows the cumulated periodogram of the residuals. The residuals are within the confidence bands, but they are wobbling around the diagonal. This can support the fact of a seasonal trend in the residuals.
 
 ```{r, fig.cap="\\label{fig_ex_2c_6}Cumulated periodogram of the residuals."}
 # plot ----
@@ -1273,7 +1258,7 @@ It is assumed that the model performs well enough. As future work the modelling 
 
 \newpage
 #### Estimated heat capacities
-The estimated head capaities for the East room and the West room are given in eqn. \ref{eq_2c_1} and eqn. \ref{eq_2c_2} resoectively.
+The estimated head capacities for the East room and the West room are given in eqn. \ref{eq_2c_1} and eqn. \ref{eq_2c_2} respectively.
 
 \begin{equation}
 \begin{aligned}
@@ -1306,23 +1291,22 @@ K_at_20 <- 293.15
 
 ```
 
-The specific heat property of air is $`r shc_air`\left[ \frac{kJ}{kg \cdot ^\circ C} \right]$ and the specific heat capacity for conrete (I assume the same heat capacity for flagstone) is $`r shc_con` \left[ \frac{kJ}{kg \cdot ^\circ C}\right]$\footnote{url: https://www.engineeringtoolbox.com/specific-heat-capacity-d\_391.html}. 
+The specific heat property of air is $`r shc_air`\left[ \frac{kJ}{kg \cdot ^\circ C} \right]$ and the specific heat capacity for concrete (I assume the same heat capacity for flagstone) is $`r shc_con` \left[ \frac{kJ}{kg \cdot ^\circ C}\right]$\footnote{URL: https://www.engineeringtoolbox.com/specific-heat-capacity-d\_391.html}. 
 
 \begin{itemize}
-\item The estimates of $C_i$ diviates with $`r round(abs(prm$fit.TiTm_2b$Ci - prm$fit.TiTm_2c$Ci) / prm$fit.TiTm_2b$Ci * 100,3)` \%$ from the east room to the west room.
-The east room ($C_{east,i}$) diviates with $`r round(abs(prm$fit.TiTm_2b$Ci - shc_air) / prm$fit.TiTm_2b$Ci * 100,3)`\%$ from its specific heat capcity and the west room ($C_{west,i}$) diviates with $`r round(abs(prm$fit.TiTm_2c$Ci - shc_air) / prm$fit.TiTm_2c$Ci * 100,3)`\%$ from its specific heat capcity.
-\item The estimates of $C_m$ diviates with $`r round(abs(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / prm$fit.TiTm_2b$Cm * 100,3)` \%$ from the east room to the west room.
+\item The estimates of $C_i$ deviates with $`r round(abs(prm$fit.TiTm_2b$Ci - prm$fit.TiTm_2c$Ci) / prm$fit.TiTm_2b$Ci * 100,3)` \%$ from the east room to the west room.
+The east room ($C_{east,i}$) deviates with $`r round(abs(prm$fit.TiTm_2b$Ci - shc_air) / prm$fit.TiTm_2b$Ci * 100,3)`\%$ from its specific heat capacity and the west room ($C_{west,i}$) deviates with $`r round(abs(prm$fit.TiTm_2c$Ci - shc_air) / prm$fit.TiTm_2c$Ci * 100,3)`\%$ from its specific heat capacity.
+\item The estimates of $C_m$ deviates with $`r round(abs(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / prm$fit.TiTm_2b$Cm * 100,3)` \%$ from the east room to the west room.
 \end{itemize}
 <!---
 The east room ($C_{east,m}$) diviates with $`r round(abs(prm$fit.TiTm_2b$Cm - shc_con) / prm$fit.TiTm_2b$Cm * 100,3)`\%$ from its specific heat capcity and the west room ($C_{west,m}$) diviates with $`r round(abs(prm$fit.TiTm_2c$Cm - shc_con) / prm$fit.TiTm_2c$Cm * 100,3)`\%$ from its specific heat capcity. 
 -->
 
-Let us assume that the estimated value of $C_{west,m}$ is a correct estimate of $C_m$. If we then subtract $C_{east,m}$ from $C_{west,m}$, then this should represent the combined heat capcaity contribution of the concrete and flagstones: $C_{east,m} - C_{west,m} = `r round(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm,3)`$.
+Let us assume that the estimated value of $C_{west,m}$ is a correct estimate of $C_m$. If we then subtract $C_{east,m}$ from $C_{west,m}$, then this should represent the combined heat capacity of the concrete and flagstones: $C_{east,m} - C_{west,m} = `r round(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm,3)`$.
 
-This value is $\approx`r round((prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / shc_con,0)`$ the value of the as specific heat capacity for concrete/flagstone. This can be caused one of the following, either the heat capacity for flagstone is much different than the heat capacity for concrete or the estimates of $C_{east,m}$ and $C_{west,m}$ are far from correct. 
+This value is $\approx`r round((prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / shc_con,0)`$ the value of the specific heat capacity for concrete/flagstone. This can be caused in one of the following, either the heat capacity of flagstone is much different than the heat capacity of concrete or the estimates of $C_{east,m}$ and $C_{west,m}$ are far from correct. 
 
-I do not have competencies within the field of constructions and those kind of materials. I will state the the estimated values of $C_{east,m}$ and $C_{west,m}$ reasonable, according to the outputs from each estimation on page \ref{page_out_1} and page \ref{page_out_2}. TODO
-
+I do not have competencies within the field of constructions and those kind of materials. I will state that the estimated values of $C_{east,m}$ and $C_{west,m}$ is reasonable, according to the outputs from each estimation on page 29 and page 31.
 
 <!---
 ##### Concrete in the East room
