@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+*.pdf
 CE_1/CE_1_files/*
 CE_1/CE_1_cache/*
 CE_1/CE_1_cache/latex/*

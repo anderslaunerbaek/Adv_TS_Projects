@@ -132,7 +132,7 @@ t &= 1:\Delta:T \\
 
 
 ### Question 1a
-It is possible to change the process by changes the value of $\sigma$. An increase in $\sigma$ will provide a bigger variation in the Wiener process. Below there have been plotted relizations of $Y_k^1$ and $Y_k^2$ wrt. time and a phase plot of $Y_k^1$ and $Y_k^2$. 
+It is possible to change the process by changes the value of $\sigma$. An increase in $\sigma$ will provide a bigger variation in the Wiener process. Below there have been plotted realizations of $Y_k^1$ and $Y_k^2$ wrt. time and a phase plot of $Y_k^1$ and $Y_k^2$. 
 The following function `model_func()` has been used to plot 
 
 ```{r, echo=TRUE}
@@ -170,7 +170,7 @@ model_func <- function(sigma, delta, t, Theta, init_values) {
   return(list("sim" = data, "re_plot" = re_plot, "ph_plot" = ph_plot))
 }
 ```
-The relizations of $Y_k^1$ and $Y_k^2$ wrt. time and phase plots of $Y_k^1$ and $Y_k^2$ are constructed for different $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
+The realizations of $Y_k^1$ and $Y_k^2$ wrt. time and phase plots of $Y_k^1$ and $Y_k^2$ are constructed for different $\sigma=[0.0,\,0.1,\,0.2,\,0.3,\,0.4]$.
 
 \newpage
 #### $\sigma = 0.00$
@@ -183,7 +183,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_12}Phase plot of the simulation with sigma = 0.0."}
 tmp$ph_plot
 ```
-$\sigma = 0.0$ returns a stable cyclic system. It takes $\approx10$ time steps for the system to converge to its cyclic pattern. The $\approx10$ time steps will be the same for all simulations. This is caused by the intial parameters of $Y_0^1$ and $Y_0^2$.
+$\sigma = 0.0$ returns a stable cyclic system. It takes $\approx10$ time steps for the system to converge to its cyclic pattern. The $\approx10$ time steps will be the same for all simulations. This is caused by the initial parameters of $Y_0^1$ and $Y_0^2$.
 
 \newpage
 #### $\sigma = 0.10$
@@ -210,7 +210,7 @@ tmp$re_plot
 tmp$ph_plot
 ```
 
-Changing $\sigma$ to $0.20$ does make an effect in both the realizations and in the phase plot. The time sereis still needs $\approx10$ time steps to converge to its normal cyclic pattern. The pattern changes dramatically after that for some cycles, back to normal and then back to the abnormal pattern agian. The cahnge in $\sigma$ from $0.10$ to $0.20$ increase the effect of the wiener process.
+Changing $\sigma$ to $0.20$ does make an effect in both the realizations and in the phase plot. The time sereis still need $\approx10$ time steps to converge to its normal cyclic pattern. The pattern changes dramatically after that for some cycles, back to normal and then back to the abnormal pattern again. The change in $\sigma$ from $0.10$ to $0.20$ increase the effect of the Wiener process.
 
 \newpage
 #### $\sigma = 0.30$
@@ -223,7 +223,7 @@ tmp$re_plot
 ```{r, fig.cap="\\label{fig_ex_1_42}Phase plot of the simulation with sigma = 0.30."}
 tmp$ph_plot
 ```
-Changing $\sigma$ from $0.20$ to $0.30$ gives more less the same illustrations as before. It is noticable to see a greater variance $Y_k^2$ when $Y_k^1$ is in the range $[-1.75;\,1.5]$.
+Changing $\sigma$ from $0.20$ to $0.30$ gives more less the same illustrations as before. It is noticeable to see a greater variance $Y_k^2$ when $Y_k^1$ is in the range $[-1.75;\,1.5]$.
 
 \newpage
 #### $\sigma = 0.40$
@@ -238,12 +238,12 @@ tmp$ph_plot
 ```
 For $\sigma = 0.40$ the changes between the normal cyclic pattern and the abnormal pattern is changing more frequently.
 
-The length of the abnormal cycles has great influce of the amplitude of the time series. The amplitudes are more similar to the normal pattern when the abnormal pattern is short. For longer peroid of abnormal pattern entail smaller amplitudes. The smaller amplitudes creates more cycles in the lower rigth corner of the phase plot.
+The length of the abnormal cycles has great influence of the amplitude of the time series. The amplitudes are more similar to the normal pattern when the abnormal pattern is short. For longer period of abnormal pattern entail smaller amplitudes. The smaller amplitudes creates more cycles in the lower right corner of the phase plot.
 
 \newpage
 #### Comment on the effect of adding noise to the equations
 \begin{itemize}
-\item The first and most noticeable visual change by increasing the noise ($\sigma$) is the amplitude and the nnumber of cycles in the abnormal pattern. Those effecting the "number of cycles" in the abnormal pattern where greater values of $\sigma$ ential more frequent change between the normal pattern and the abnormal pattern.
+\item The first and most noticeable visual change by increasing the noise ($\sigma$) is the amplitude and the number of cycles in the abnormal pattern. Those effecting the "number of cycles" in the abnormal pattern where greater values of $\sigma$ entail more frequent change between the normal pattern and the abnormal pattern.
 \item A greater value of $\sigma$ has a small impact of the effected range of $Y_k^1$. The effect range of $Y_k^1$ is for all four simulation more less the given range $[-1.75;\,1.5]$. Where the effect range of $Y_k^2$ is increasing in all four simulations.
 \item MORE? TODO
 \end{itemize}
@@ -369,7 +369,9 @@ The provided data has following properties:
 \item $PhE$ The power of the heater in the East room $\left[kW\right]$.
 \item $PhW$ The power of the heater in the West room $\left[kW\right]$.
 \end{itemize}
-The sample perid is $10 \left[min\right]$.
+The sample period is $10 \left[min\right]$.
+
+\textbf{NB:} It is worth mention that there has not been been considered any kind of outlier detection prior to model fitting. But there is some "dramatic" behaviour around mid day between Oct. 12 and Oct. 13.
 
 ### Question 2a
 Question 2a focus at the East room and uses $TiE$ as input variable $yTi$ and $TiW$ as target variable $Tn$.
@@ -378,9 +380,9 @@ The script `fitmodel.R` has been implemented step by step in the following secti
 
 #### 1. Step
 
-Figure \ref{fig_ex_2_1} shows the interesting recorded time series in three subplots:
+Figure \ref{fig_ex_2_1} shows the interesting recorded time series in three sub-plots:
 \begin{itemize}
-\item A step seqence which tells when the heater is on $Ph$ in the east room.
+\item A step sequence which tells when the heater is on $Ph$ in the east room.
 \item The ambient temperature $Tn$, the indoor air temperature in the east room $yTi$ and the indoor air temperature in the west room $Ta$.
 \item The solar radiation on a vertical surface facing south $Gv$.
 \end{itemize}
@@ -414,17 +416,17 @@ p3 <- ggplot2::ggplot(data) +
 multiplot(p1, p2, p3, cols=1)
 ```
 
-It is possible to see how the solor radiation, on surface facing south, increases the temperatures and the pattern for the heater in figure \ref{fig_ex_2_1}. 
+It is possible to see how the Solar radiation, on surface facing south, increases the temperatures and the pattern for the heater in figure \ref{fig_ex_2_1}. 
 
 \newpage
 #### 2. Step
 
-There has been implmeneted the most simple model of the system in step 2. 
+There has been implemented the most simple model of the system in step 2. 
 
-Equantion \ref{eq_2_2a_1} and eqn. \ref{eq_2_2a_2} shows the system eqn. and measurement eqn. respectively.
+Equation \ref{eq_2_2a_1} and eqn. \ref{eq_2_2a_2} shows the system eqn. and measurement eqn. respectively.
 
 \begin{equation}
-dT_i=\left( \frac{1}{R_{ia}C_i}\left(T_a-T-i \right) +\frac{1}{C_i}\Phi_h  \right)dt+\sigma_id\omega_i
+dT_i=\left( \frac{1}{R_{ia}C_i}\left(T_a-T_i \right) +\frac{1}{C_i}\Phi_h  \right)dt+\sigma_id\omega_i
 \label{eq_2_2a_1}
 \end{equation}
 \begin{equation}
@@ -466,7 +468,7 @@ analyzeFit(fit, plotit = FALSE)
 
 The optimization procedure works out without any problems but we compare the value in $dF/dPar$ with the value in $dPen/dPar$. If the values are significantly different, the particular initial parameter value it is close to one of its limits. A solution to this is to loosen the particular initial parameter value. \footnote{P.15 http://ctsm.info/pdfs/ctsmr-reference.pdf}
 
-I fixed this issue by increasing the limits on both of the following two parameters $Ria$ and $Ti0$. Then estimate the model agian.
+I fixed this issue by increasing the limits on both of the following two parameters $Ria$ and $Ti0$. Then estimate the model again.
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## Be a bit smart and do the same in a function, see functions/Ti.R
@@ -496,13 +498,13 @@ analyzeFit(fit.Ti, plotit = FALSE)
 #summary(fit.Ti, extended = TRUE)
 ```
 It is possible to see the new estimated parameters in the output above. 
-The estimated values of the two affected parameters are now $Ti0 = 24.502$, which was close to a initial binding value for $Ti0$, and $Ria = 26.260$ which is roughly about twice as munch as the inital upper limit value for $Ria$. 
+The estimated values of the two affected parameters are now $Ti0 = 24.502$, which was close to a initial binding value for $Ti0$, and $Ria = 26.260$ which is roughly about twice as munch as the initial upper limit value for $Ria$. 
 
-By fixing the initiallimit issues also increased the loglikelihood significantly and decreased the correlations among the parameters which is desirable.
+By fixing the initial limit issues also increased the log-likelihood significantly and decreased the correlations among the parameters which is desirable.
 
 \newpage
 #### 4. Step
-The estimated model is analyzed in step 4. We are interested in the residuals of the one step ahead prediction.
+The estimated model is analysed in step 4. We are interested in the residuals of the one step ahead prediction.
 ```{r, echo=TRUE}
 # Calculate the one-step predictions of the state
 pred <- predict(fit.Ti)
@@ -514,7 +516,7 @@ data$residuals <- data$yTi - data$yTiHat
 
 ##### Time Series of the residuals
 
-Figure \ref{fig_ex_2b_1} shows a time serie plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is some systematic behavoir left.
+Figure \ref{fig_ex_2b_1} shows a time Series plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is some systematic behaviour left.
 
 ```{r, fig.cap="\\label{fig_ex_2b_1}Time serie plot of the residuals."}
 ggplot(data) +
@@ -523,11 +525,12 @@ ggplot(data) +
   theme_TS()
 ```
 
+\newpage
 ##### Distribution of the residuals
 
-Figure \ref{fig_ex_2b_2} shows a histogram of the residuals. This plot supports the statement from above that the residuals is not gaussian distributed and therefore not white noise.
+Figure \ref{fig_ex_2b_2} shows a histogram of the residuals. This plot supports the statement from above that the residuals is not Gaussian distributed and therefore not white noise.
 
-```{r, fig.cap="\\label{fig_ex_2b_2}Histogram of the residuals."}
+```{r, message=FALSE, fig.cap="\\label{fig_ex_2b_2}Histogram of the residuals."}
 
 data$gauss <- rnorm(nrow(data), mean = 0, sd = 1)
 
@@ -625,7 +628,7 @@ ggplot(spec_pgram_df) +
 
 ##### Cumulated periodogram of the residuals
 
-Figure \ref{fig_ex_2b_6} shows the cumulated periodogram of the residuals. It is possible to see that the residuals are dependent of each other, which identicate that there is still unexpolred systematic behavoir left in the residuals. The residuals will be on the diagonal in cumulated periodogram if they are white noise.
+Figure \ref{fig_ex_2b_6} shows the cumulated periodogram of the residuals. It is possible to see that the residuals are dependent of each other, which identicates that there is still unexplored systematic behaviour left in the residuals. The residuals will be on the diagonal in cumulated periodogram if they are white noise.
 
 ```{r, fig.cap="\\label{fig_ex_2b_6}Cumulated periodogram of the residuals."}
 # function ----
@@ -677,9 +680,10 @@ ggplot() +
   theme_TS()
 ```
 
-##### combined
+\newpage
+##### Combined plot
 
-Figure \ref{fig_ex_2b_7} shows
+The one step ahead residuals have been placed in figure \ref{fig_ex_2b_7} have been placed above the three sub-plots in figure \ref{fig_ex_2_1}.
 
 ```{r, fig.cap="\\label{fig_ex_2b_7}Conbined plot with the residuals, the heater, measured and predicted temperature, ect.."}
 data$zero <- 0
@@ -728,12 +732,24 @@ p5 <- ggplot2::ggplot(data) +
 multiplot(p1, p2, p3, p4, p5, cols=1)
 ```
 
+It is much easier to see a systematic behaviour in the residuals in figure \ref{fig_ex_2b_7} compared to figure \ref{fig_ex_2b_1}. It is possible to see a cyclic pattern in the residuals when there is no $Gv$ and only the $Ph$ contributes to the temperature of the room.
 
 
-
+\newpage
 #### 5. Step
 
-figure \ref{} new
+The model of the system (eqn. \ref{eq_2_2a_1} and eqn. \ref{eq_2_2a_2}) have been updated to contain an new parameter $R_{im}$ and a new state $dT_m$. The measurement equation remains the same as in eqn. \ref{eq_2_2a_2}. The new updated model is given in eqn. \ref{eq_2_5a_1}.
+
+\begin{equation}
+\begin{aligned}
+dT_i&=\left( \frac{1}{R_{im}C_i}\left(T_m-T_i \right) + \frac{1}{R_{ia}C_i}\left(T_a-T_i \right) +\frac{1}{C_i}\Phi_h  \right)dt+\sigma_id\omega_i\\
+dT_m&=\left( \frac { 1 }{ R_{ im }C_{ m } } \left( T_{ a }-T_{ m } \right)  \right) dt+\sigma_{ m }d\omega_{ m } \\
+\end{aligned}
+\label{eq_2_5a_1}
+\end{equation}
+
+
+The new $TiTm$ model has been estimated again and has following estimated parameters: 
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
@@ -766,9 +782,15 @@ fit.TiTm <- model.TiTm$estimate(data)
 analyzeFit(fit.TiTm, plotit = FALSE)
 ```
 
+\begin{itemize}
+\item An effect of adding the new state to the system is the increased log-likelihood value. 
+\item The $Ria$ parameter has a quiet large p-value but is still significant. The standard error is also quiet large compared to the estimated value of the parameter.
+\end{itemize}
+
+
 \newpage
 #### 6. Step
-
+The similar one step ahead prediction errors as in step 4. plotted and analysed in step 6.
 ```{r}
 ## Calculate the one-step predictions of the state
 pred <- predict(fit.TiTm)
@@ -778,27 +800,44 @@ data$residuals <- data$yTi - data$yTiHat
 ```
 
 ##### Time Series of the residuals
-```{r}
+
+Figure \ref{fig_ex_2b_6_1} shows a time series plot of residuals from the one step ahead predictions. It is clear to see that the residuals if not white noise which indicates that there is still some systematic behaviour within the residuals.
+
+```{r, fig.cap="\\label{fig_ex_2b_6_1}Time serie plot of the residuals."}
 ggplot(data) +
   geom_line(aes(x = timedate, y = residuals, color = "Residuals"), alpha = 1/2) +
   labs(x = "timedate", y = "", color = "") +
   theme_TS()
 ```
+
+\newpage
 ##### Distribution of the residuals
-```{r}
+
+Figure \ref{fig_ex_2b_6_2} shows a histogram of the residuals. If you compare the residuals from the simple model (eqn. \ref{eq_2_2a_1} and figure \ref{fig_ex_2b_2}) by the distribution of the residuals in from the new updated model (eqn. \ref{eq_2_5a_1}, figure \ref{fig_ex_2b_6_2}), the residuals tends to be more in the positive region of the histogram. The residuals are still not Gaussian distributed and hereby not white noise.
+
+```{r, message=FALSE, fig.cap="\\label{fig_ex_2b_6_2}Histogram of the residuals."}
 ggplot(data) +
+  #eom_histogram(aes(x = gauss, color = "Gauss"), alpha = 1/2) +
   geom_histogram(aes(x = residuals, color = "Residuals"), alpha = 1/2) +
   labs(x = "epsilon", y = "frequency", color = "") +
   theme_TS()
 ```
 
-##### ACF of the residuals
+\newpage
+##### ACF and PACF of the residuals
 
-```{r}
+Figure \ref{fig_ex_2b_6_3} and figure \ref{fig_ex_2b_6_4} shows the ACF and the PACF of the residuals.
+```{r, fig.cap="\\label{fig_ex_2b_6_3}ACF of the residuals."}
 lags_acf <- data.frame(lag = acf(data$residuals, plot = F, lag.max=8*24)$lag,
                        acf = acf(data$residuals, plot = F, lag.max=8*24)$acf,
                        confi = qnorm((1 + 0.95)/2)/sqrt(length(data$residuals)), # from introduction to times series
                        zero = 0)
+
+lags_pacf <- data.frame(lag = pacf(data$residuals, plot = F, lag.max=8*24)$lag,
+                       acf = pacf(data$residuals, plot = F, lag.max=8*24)$acf,
+                       confi = qnorm((1 + 0.95)/2)/sqrt(length(data$residuals)), # from introduction to times series
+                       zero = 0)
+
 #
 ggplot() +
   geom_segment(data = lags_acf,
@@ -825,9 +864,40 @@ ggplot() +
   theme_TS()
 ```
 
+
+```{r, fig.cap="\\label{fig_ex_2b_6_4}PACF of the residuals."}
+ggplot() +
+  geom_segment(data = lags_pacf,
+               aes(x = lag, y = zero,
+                   xend = lag, yend = acf,
+                   colour = "PACF"),
+               alpha = 1/2) +
+  #
+  geom_segment(aes(x = min(lags_acf$lag),
+                   xend = max(lags_acf$lag),
+                   y = lags_acf$confi,
+                   yend = lags_acf$confi,
+                   colour = "95%"),
+               linetype = 2) +
+  geom_segment(aes(x = min(lags_acf$lag),
+                   xend = max(lags_acf$lag),
+                   y = -lags_acf$confi,
+                   yend = -lags_acf$confi,
+                   colour = "95%"),
+               linetype = 2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks = seq(from = 0, to = max(lags_acf$lag), by = 10)) + 
+  labs(x = "lag", y = "value", color = "") +
+  theme_TS()
+```
+
+The ACF (figure \ref{fig_ex_2b_6_3}) and the PACF (figure \ref{fig_ex_2b_6_4}) of the residuals from model $TiTm$ much less correlation in the residuals, which indicates that the $TiTm$ model describes more systematic behaviour than the simple $Ti$ model (ACF figure \ref{fig_ex_2b_3} and PACF figure \ref{fig_ex_2b_4}).
+
+\newpage
 ##### Periodogram of the residuals
 
-```{r}
+Figure \ref{fig_ex_2b_6_5} shows the periodogram of the residuals.
+```{r, fig.cap="\\label{fig_ex_2b_6_5}Periodogram of the residuals."}
 # The periodogram is the estimated energy spectrum in the signal
 tmp <- spec.pgram(data$residuals, plot = FALSE)
 spec_pgram_df <- data.frame(freq = tmp$freq,
@@ -840,40 +910,14 @@ ggplot(spec_pgram_df) +
 ```
 
 
+\newpage
+##### Cumulated periodogram of the residuals
 
-##### Commulated Periodogram of the residuals
-```{r}
-# function ----
-cpgram_func <- function (ts, taper = 0.1) {
-    
-    if (NCOL(ts) > 1) 
-        stop("only implemented for univariate time series")
-    x <- as.vector(ts)
-    x <- x[!is.na(x)]
-    x <- spec.taper(scale(x, TRUE, FALSE), p = taper)
-    y <- Mod(fft(x))^2/length(x)
-    y[1L] <- 0
-    n <- length(x)
-    x <- (0:(n/2)) * frequency(ts)/n
-    if (length(x)%%2 == 0) {
-        n <- length(x) - 1
-        y <- y[1L:n]
-        x <- x[1L:n]
-    }
-    else y <- y[seq_along(x)]
-    xm <- frequency(ts)/2
-    mp <- length(x) - 1
-    crit <- 1.358/(sqrt(mp) + 0.12 + 0.11/sqrt(mp))
-    oldpty <- par(pty = "s")
-    on.exit(par(oldpty))
-    return(list("df" = data.frame(x=x,y=cumsum(y)/sum(y)), 
-                "xlim" = c(0, xm), "ylim" = c(0, 1),
-                "confi_upper" = c(c(0, xm * (1 - crit)), c(crit, 1)),
-                "confi_lower" = c(c(xm * crit, xm), c(0, 1 - crit))
-                ))
-}
+Figure \ref{fig_ex_2b_6_6} shows the cumulated periodogram of the residuals.
 
+The all the residuals from the one step ahead prediction errors of the new $TiTm$ model are within the $95\%$ confident bands. This plot illustrates a clear improvement from the simple model $Ti$ (figure \ref{fig_ex_2b_6}) to the extended model $TiTm$ (figure \ref{fig_ex_2b_6_6}). The residuals are closer to the diagonal which is an identification of white noise.
 
+```{r, fig.cap="\\label{fig_ex_2b_6_6}Cumulated periodogram of the residuals."}
 # plot ----
 cpgram <- cpgram_func(data$residuals)
 ggplot() +
@@ -881,20 +925,23 @@ ggplot() +
   geom_segment(aes(x = cpgram$confi_upper[1],
                    y = cpgram$confi_upper[3],
                    xend = cpgram$confi_upper[2],
-                   yend = cpgram$confi_upper[4], colour = "CI"),
+                   yend = cpgram$confi_upper[4], colour = "95%CI"),
                alpha = 1/2) +
   geom_segment(aes(x = cpgram$confi_lower[1],
                    y = cpgram$confi_lower[3],
                    xend = cpgram$confi_lower[2],
-                   yend = cpgram$confi_lower[4], colour = "CI"),
+                   yend = cpgram$confi_lower[4], colour = "95%CI"),
                alpha = 1/2) +
   labs(x = "frequency", y = "", color = "") +
   theme_TS()
 ```
 
-##### combined
-```{r}
-data$zero <- 0
+\newpage
+##### Combined plot
+
+The one step ahead residuals have been placed above the three sub-plots (figure \ref{fig_ex_2_1}) in figure \ref{fig_ex_2b_6_7}.
+
+```{r, fig.cap="\\label{fig_ex_2b_6_7}Conbined plot with the residuals, the heater, measured and predicted temperature, ect.."}
 p1 <- ggplot(data) +
   geom_line(aes(x = timedate, y = residuals, color = "Residuals"), alpha = 1/2) +
   geom_line(aes(x = timedate, y = zero, color = "zero"), alpha = 1/2) +
@@ -903,7 +950,6 @@ p1 <- ggplot(data) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-
 
 p2 <- ggplot(data) +
   geom_line(aes(x = timedate, y = Ph, color = "Ph"), alpha = 1/2) +
@@ -923,7 +969,6 @@ p3 <- ggplot2::ggplot(data) +
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
   
-
 p4 <- ggplot2::ggplot(data) + 
   ggplot2::geom_line(aes(x = timedate, y = Ta, color = "Ta"), alpha = 1/2) +
   labs(x = "timedate", y = "", color = "") +
@@ -940,13 +985,9 @@ p5 <- ggplot2::ggplot(data) +
 multiplot(p1, p2, p3, p4, p5, cols=1)
 ```
 
-
-
-
-
-
-
 #### 7. Step
+
+There has been performed an log-likelihood-ratio test in step 7 of the two models $Ti$ and $TiTm$. 
 
 ```{r}
 ## Perform a likelihood ratio test: lambda = lik(smallerModel)/lik(largerModel) ,
@@ -965,44 +1006,58 @@ prmDiff <- fit.TiTm$model$NPARAM - fit.Ti$model$NPARAM
 p_value <- 1 - pchisq(chisqStat, prmDiff)
 ```
 
-The P value from $`r p_value`$
+The p-value of the log-likelihood-ratio test is: $p=`r p_value`$, which tells that the $TiTm$ model is significantly better than the $Ti$ model.  
 
 #### Consider the following
 \begin{itemize}
 \item Discuss the white-noise properties of the (one-step ahead) residuals for model $T_i$.
 \begin{itemize}
-\item 
-\item
+\item By plotting the distribution, ACF and PACF and the cumulated periodogram of the residuals (figure \ref{fig_ex_2b_2}, \ref{fig_ex_2b_3} and \ref{fig_ex_2b_5}) it is possible to conclude that there is  systematic behaviour left in the residuals.
 \end{itemize}
 \item What useful information can be obtained from the time series plots of the residuals and the inputs for model $T_i$?
 \begin{itemize}
-\item 
-\item
+\item The realization of the residuals in figure \ref{fig_ex_2b_1} shows the first property of the residuals. There is to some extent systematic periodic behaviour left in the residuals.
+\item The combined plot (figure \ref{fig_ex_2b_7}) of the residuals and the other time series provides an good overview of the system. It is possible to see when the system struggles to predict the next input for the given state of the system.
+\item It is possible to see where the one step ahead prediction struggles. 
 \end{itemize}
 \item Discuss the white-noise properties of the one-step ahead residuals for model $T_iT_m$.
 \begin{itemize}
-\item 
-\item
+\item The residuals for the $TiTm$ model is much closer to white noise. This can be concluded by considering the plot of the ACF and PACF plots and the cumulated periodogram plot respectively in figure \ref{fig_ex_2b_6_3} and \ref{fig_ex_2b_6_5}. 
 \end{itemize}
 \item What useful information can be obtained from the time series plots of the residuals
 and inputs for model $T_iT_m$?
 \begin{itemize}
-\item 
-\item
+\item The same information as for the $Ti$ model above. 
+\item It is possible to conclude that the solar radiation has an effect on the one step ahead predictions for both models. This conclusion can easily be seen in both figure \ref{fig_ex_2b_7} and figure \ref{fig_ex_2b_6_7}. 
+\item It will therefore make sense to include the solar radiation in both models.of the system.
 \end{itemize}
 \item Based on the likelihood-ratio test is model $T_iT_m$ then to be preferred over model $T_i$?
 \begin{itemize}
-\item 
-\item
+\item Yes.
+\item The p-value of the log-likelihood-ratio test is: $p=`r p_value`$. This tells that the $TiTm$ model is significantly better than the $Ti$ model.
 \end{itemize}
 \end{itemize}
 
+\newpage
 ### Question 2b
 
-Describe the good way to implement it...!
+The next improvement is to include the solar radiation $Gv$ in the model, eqn. \ref{eq_2b_b_1} and still use the same measurement eqn. \ref{eq_2_2a_2}. I have chosen the linear interpolation.
+
+\begin{equation}
+\begin{aligned}
+dT_i&=\left( \frac { 1 }{ R_{ im }C_{ i } } \left( T_{ m }-T_{ i } \right) +\frac { 1 }{ R_{ ia }C_{ i } } \left( T_{ a }-T_{ i } \right) +\frac{pA_w } {C_i } G_v+\frac { 1 }{ C_{ i } } \Phi_{ h } \right) dt+\sigma_{ i }d\omega_{ i }\\
+dT_m&=\left( \frac { 1 }{ R_{ im }C_{ m } } \left( T_{ a }-T_{ m } \right) +\frac { \left( 1-p \right) A_w }{ C_m } G_v \right) dt+\sigma_{ m }d\omega_{ m }
+\end{aligned}
+\label{eq_2b_b_1}
+\end{equation}
 
 
-what is Aw, Gv and p.. must
+By implemented the solar radiation ($Gv$) in the system, two additional parameters have been introduced:
+\begin{itemize}
+\item The linear interpretation $p$ identifies the ratio in which the inside air temperature or the interior thermal medium will absorb the solar radiation $Gv$.
+\item $Aw = 7.5+4.8 = 12.3 [m^2]$ which is the effective window area of the building.
+\end{itemize}
+
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
 model.TiTm_2b <- ctsm()
@@ -1029,57 +1084,59 @@ model.TiTm_2b$setParameter( e11 = c(init=-1  ,lb=-50   ,ub=10) )
 
 model.TiTm_2b$setParameter( p = c(init=0.5  ,lb=0   ,ub=1) )
 model.TiTm_2b$setParameter( Aw = 7.5+4.8 )
-#model.TiTm_2b$setParameter( Gv = c(init=mean(data$Gv)  ,lb=min(data$Gv)   ,ub=max(data$Gv)) )
 
 ## Run the parameter optimization
 fit.TiTm_2b <- model.TiTm_2b$estimate(data)
-```
-
-
-
-```{r}
-analyzeFit(fit.TiTm_2b, plotit = FALSE)
+#
 prm$fit.TiTm_2b$Ci <- data.frame(summary(fit.TiTm_2b)$coefficients)["Ci","Estimate"]
 prm$fit.TiTm_2b$Cm <- data.frame(summary(fit.TiTm_2b)$coefficients)["Cm","Estimate"]
 prm$fit.TiTm_2b$loglik <- fit.TiTm_2b$loglik
+prm$fit.TiTm$loglik <- fit.TiTm$loglik
+```
+The new models has been estimated and its output is as follows: 
+```{r}
+analyzeFit(fit.TiTm_2b, plotit = FALSE)
 ```
 
+\label{page_out_1}
+
+\newpage
+#### Consider ...
+It has been decided only to include a plot of the squared residuals against $Gv$ and comparing the likelihoods of the two models, instead of an complete residual analysis as above.
 ```{r}
 ## Calculate the one-step predictions of the state
 pred <- predict(fit.TiTm_2b)
 ## Calculate the residuals and put them with the data
 data$yTiHat_2b <- pred[[1]]$output$pred$yTi
 data$residuals_2b <- data$yTi - data$yTiHat_2b
-```
 
-#### Consider
+data$residuals_2b <- data$residuals_2b^2
+data$residuals <- data$residuals^2
+
+```
 \begin{itemize}
 \item Findings
 \begin{itemize}
-\item Plot of the resi
-```{r}
+\item The parameter $Aw$ is given as a constant, which causes the `NA`'s in the summary output. The value of $Aw$ is `r fit.TiTm_2b$xm["Aw"]`. 
+\item The parameter $p$ is estimated to `r round(fit.TiTm_2b$xm["p"],3)`, which tells that the `r round(fit.TiTm_2b$xm["p"] * 100,0)`$\%$ of the solar radiation will be absorbed in the inside air temperature. The remaining `r round((1-fit.TiTm_2b$xm["p"]) * 100,0)`$\%$ will be absorbed by the interior walls and furnitures.
+\item The two realizations in figure \ref{fig_ex_2b_1_6_1} illustrates the squared residuals against $Gv$ of the model which not include the solar radiation and the model which do include the solar radiation, eqn. \ref{eq_2_5a_1} and eqn. \ref{eq_2b_b_1} respectively.
+```{r, fig.cap="\\label{fig_ex_2b_1_6_1}Ralizations of squared residuals as function of Gv."}
 ggplot(data) +
-  geom_line(aes(x = Gv, y = residuals, color = "Residuals(Gv)"), alpha = 1/2) +
-  geom_line(aes(x = Gv, y = residuals_2b, color = "Residuals(Gv)2"), alpha = 1/2) +
-  #geom_line(aes(x = residuals, y = residuals_2b, color = "Residuals(Gv)2"), alpha = 1/2) +
+  geom_line(aes(x = Gv, y = residuals, color = "Residuals^2 TiTm"), alpha = 1/1) +
+  geom_line(aes(x = Gv, y = residuals_2b, color = "Residuals^2 TiTm_Gv"), alpha = 1/1) +
+  #geom_line(aes(x = Gv, y = residuals_abs, color = "Residuals TiTm with Gv"), alpha = 1/2) +
   labs(x = "Gv", y = "residuals", color = "") +
   theme_TS()
-
 ```
 
-\item Changes in squard residuals: 
+The amplitudes of the squared residuals of the model (eqn. \ref{eq_2b_b_1}) which include $Gv$ is smaller than the residuals from the model (eqn. \ref{eq_2_5a_1}) which exclude $Gv$. \\
+The summed squared residuals, of the model (eqn. \ref{eq_2b_b_1}), is `r round((sum(data$residuals) - sum(data$residuals_2b)) / sum(data$residuals) * 100,3)`$\%$ lower than the model (eqn. \ref{eq_2_5a_1}), which identicates a better model. This can also be seen their log-likelihoods.
+\end{itemize}
+\item Likelihood-ratio test
 \begin{itemize}
-\item Question 2a: `r sum(data$residuals^2)`
-\item Question 2b: `r sum(data$residuals_2b^2)`
-\end{itemize}
-\end{itemize}
-\item Likelihood 
-\begin{itemize}
-\item Question 2a: `r fit.TiTm$loglik`
-\item Question 2b: `r prm$fit.TiTm_2b$loglik`
-\end{itemize}
-
-\item Likelihood ratio test
+\item The model (eqn. \ref{eq_2b_b_1}) has increased the log-likelihoods of `r round((prm$fit.TiTm_2b$loglik - prm$fit.TiTm$loglik) / prm$fit.TiTm_2b$loglik * 100,3)`$\%$ from the model (eqn. \ref{eq_2_5a_1}).
+\item Likelihood-ratio test\\
+A likelihood-ratio test has been performed in order to validate weather the model (eqn. \ref{eq_2b_b_1}) is better or worse than the model (eqn. \ref{eq_2_5a_1}).
 ```{r}
 ## Perform a likelihood ratio test: lambda = lik(smallerModel)/lik(largerModel) ,
 ## where the smallerModel is submodel of the largerModel and lambda is chi2(f)
@@ -1097,13 +1154,19 @@ prmDiff <- fit.TiTm_2b$model$NPARAM - fit.TiTm$model$NPARAM
 p_value <- 1 - pchisq(chisqStat, prmDiff)
 ```
 
-The P value from $`r p_value`$
-\item Conclusion: 
+The p-value from the test is: $p = `r round(p_value,3)`$ which tells that the model, which include the solar radiation, is significant better performing than the model which not include the solar radiation.
+\end{itemize}
+\item Conclusion: The solar radiation should be included in the model.
 \end{itemize}
 
-
+\newpage
 ### Question 2c
-Describe how i changed input
+I decided to use the same model (eqn. \ref{eq_2b_b_1}) and change the input data. The difference between privous two qestions and this is the way to select columns. Examples on selecting correct columns from the csv below:
+\begin{itemize}
+\item Question 2a and 2b: \emph{data $\leftarrow$ data[,c(1,2,4,5,6,3)]}
+\item Question 2c: \emph{data $\leftarrow$ data[,c(1,3,4,5,7,2)]}
+\item Column names in both cases: \emph{names(data) $\leftarrow$ c("timedate","yTi","Ta","Gv","Ph","Tn")}
+\end{itemize}
 ```{r}
 data <- read.csv(file = "~/DTU/Courses/Advanced Time Series/Projects/CE_3/data.csv", 
                  stringsAsFactors = FALSE)
@@ -1117,6 +1180,7 @@ data$timedate <- asP(data$timedate)
 data$t <- asHours(data$timedate-data$timedate[1])
 ```
 
+Estimating the same model has been done after reading the data for the West room. I simply copyied the code chunk from Question 2b. The output from estimated model for the West room is given below.
 
 ```{r, echo=FALSE, include=FALSE, message=FALSE}
 ## A two-state model implemented in functions/TiTm.R
@@ -1156,20 +1220,162 @@ prm$fit.TiTm_2c$Cm <- data.frame(summary(fit.TiTm_2c)$coefficients)["Cm","Estima
 prm$fit.TiTm_2c$loglik <- fit.TiTm_2c$loglik
 ```
 
-#### Findings
+
+
+#### One step ahead prediction errors
+We are interested in the residuals of the one step ahead prediction as before, but we will only consider the realization of the residuals and the cumulated periodogram of the residuals.
+```{r, echo=FALSE}
+# Calculate the one-step predictions of the state
+pred <- predict(fit.TiTm_2c)
+# Extract the estimated value of yTi
+data$yTiHat <- pred[[1]]$output$pred$yTi
+# Calculate the residuals and add them to the data frame
+data$residuals <- data$yTi - data$yTiHat
+```
+
+##### Time Series of the residuals
+
+Figure \ref{fig_ex_2c_1} shows a time series plot of residuals from the one step ahead predictions. It is possible to see some seasonal (season of one day) trend within the residuals which identicates there is systematic behaviour left in the residuals.
+
+```{r, fig.cap="\\label{fig_ex_2c_1}Time serie plot of the residuals."}
+ggplot(data) +
+  geom_line(aes(x = timedate, y = residuals, color = "Residuals"), alpha = 1/2) +
+  labs(x = "timedate", y = "", color = "") +
+  theme_TS()
+```
+
+
+\newpage 
+##### Cumulated periodogram of the residuals
+
+Figure \ref{fig_ex_2c_6} shows the cumulated periodogram of the residuals. The residuals are within the confident bands, but they are wobbling around the diagonal, which can support the fact about a seasonal trend.
+
+```{r, fig.cap="\\label{fig_ex_2c_6}Cumulated periodogram of the residuals."}
+# plot ----
+cpgram <- cpgram_func(data$residuals)
+ggplot() +
+  geom_point(data = cpgram$df, aes(x = x, y = y, color = "cpgram"), alpha = 1/2) +
+  geom_segment(aes(x = cpgram$confi_upper[1],
+                   y = cpgram$confi_upper[3],
+                   xend = cpgram$confi_upper[2],
+                   yend = cpgram$confi_upper[4], colour = "95%CI"),
+               alpha = 1/2) +
+  geom_segment(aes(x = cpgram$confi_lower[1],
+                   y = cpgram$confi_lower[3],
+                   xend = cpgram$confi_lower[2],
+                   yend = cpgram$confi_lower[4], colour = "95%CI"),
+               alpha = 1/2) +
+  labs(x = "frequency", y = "", color = "") +
+  theme_TS()
+```
+
+It is assumed that the model performs well enough. As future work the modelling process of the West room could be done in same steps as for the East room. 
+
+\newpage
+#### Estimated heat capacities
+The estimated head capaities for the East room and the West room are given in eqn. \ref{eq_2c_1} and eqn. \ref{eq_2c_2} resoectively.
+
+\begin{equation}
+\begin{aligned}
+C_{east,i} &= `r round(prm$fit.TiTm_2b$Ci,3)` \\
+C_{east,m} &= `r round(prm$fit.TiTm_2b$Cm,3)`
+\end{aligned}
+\label{eq_2c_1}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+C_{west,i} &= `r round(prm$fit.TiTm_2c$Ci,3)` \\
+C_{west,m} &= `r round(prm$fit.TiTm_2c$Cm,3)`
+\end{aligned}
+\label{eq_2c_2}
+\end{equation}
+
+```{r}
+d_con <- 1240
+con_floor <- 4.2
+con_fs <- 0.0125
+pr_rack <- 20
+racks <- 4
+shc_con <- 0.88
+shc_air <- 1.005
+K_at_20 <- 293.15
+
+
+
+
+```
+
+The specific heat property of air is $`r shc_air`\left[ \frac{kJ}{kg \cdot ^\circ C} \right]$ and the specific heat capacity for conrete (I assume the same heat capacity for flagstone) is $`r shc_con` \left[ \frac{kJ}{kg \cdot ^\circ C}\right]$\footnote{url: https://www.engineeringtoolbox.com/specific-heat-capacity-d\_391.html}. 
+
 \begin{itemize}
-\item Log like
-\begin{itemize}
-\item Question 2b: `r prm$fit.TiTm_2b$loglik`
-\item Question 2c: `r prm$fit.TiTm_2c$loglik`
+\item The estimates of $C_i$ diviates with $`r round(abs(prm$fit.TiTm_2b$Ci - prm$fit.TiTm_2c$Ci) / prm$fit.TiTm_2b$Ci * 100,3)` \%$ from the east room to the west room.
+The east room ($C_{east,i}$) diviates with $`r round(abs(prm$fit.TiTm_2b$Ci - shc_air) / prm$fit.TiTm_2b$Ci * 100,3)`\%$ from its specific heat capcity and the west room ($C_{west,i}$) diviates with $`r round(abs(prm$fit.TiTm_2c$Ci - shc_air) / prm$fit.TiTm_2c$Ci * 100,3)`\%$ from its specific heat capcity.
+\item The estimates of $C_m$ diviates with $`r round(abs(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / prm$fit.TiTm_2b$Cm * 100,3)` \%$ from the east room to the west room.
 \end{itemize}
-\item Cap
+<!---
+The east room ($C_{east,m}$) diviates with $`r round(abs(prm$fit.TiTm_2b$Cm - shc_con) / prm$fit.TiTm_2b$Cm * 100,3)`\%$ from its specific heat capcity and the west room ($C_{west,m}$) diviates with $`r round(abs(prm$fit.TiTm_2c$Cm - shc_con) / prm$fit.TiTm_2c$Cm * 100,3)`\%$ from its specific heat capcity. 
+-->
+
+Let us assume that the estimated value of $C_{west,m}$ is a correct estimate of $C_m$. If we then subtract $C_{east,m}$ from $C_{west,m}$, then this should represent the combined heat capcaity contribution of the concrete and flagstones: $C_{east,m} - C_{west,m} = `r round(prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm,3)`$.
+
+This value is $\approx`r round((prm$fit.TiTm_2b$Cm - prm$fit.TiTm_2c$Cm) / shc_con,0)`$ the value of the as specific heat capacity for concrete/flagstone. This can be caused one of the following, either the heat capacity for flagstone is much different than the heat capacity for concrete or the estimates of $C_{east,m}$ and $C_{west,m}$ are far from correct. 
+
+I do not have competencies within the field of constructions and those kind of materials. I will state the the estimated values of $C_{east,m}$ and $C_{west,m}$ reasonable, according to the outputs from each estimation on page \ref{page_out_1} and page \ref{page_out_2}. TODO
+
+
+<!---
+##### Concrete in the East room
+Lets assmue 
+
+
 \begin{itemize}
-\item $C_i + C_m$
-\item Question 2b: `r prm$fit.TiTm_2b$Cm + prm$fit.TiTm_2b$Ci`
-\item Question 2c: `r prm$fit.TiTm_2c$Cm + prm$fit.TiTm_2c$Ci`
-\end{itemize}
+\item the density of concrete is: $`r d_con` \left[ \frac { kg }{ m^3 } \right]$.
+\item there has been used $`r con_floor` \left[ m^3\right]$ cencrete in the floor.
+\item there has been used $`r con_fs` \left[ m^3\right]$ for each flagstone on the rack.
+\item there can be `r pr_rack` flagstones on each rack.
+\item there are `r racks` racks.
+\item the heat capacity for concrete and flagstones are the same.
 \end{itemize}
 
+\begin{equation}
+\begin{aligned}
+concrete_{m^3} &= `r pr_rack` \cdot `r racks` \cdot `r con_fs` \left[ m^3\right] + `r con_floor` \left[ m^3\right] \\
+&= `r pr_rack * racks * con_fs + con_floor` \left[ m^3\right]
+\end{aligned}
+\label{eq_2c_3}
+\end{equation}
+
+kg concrete
+
+\begin{equation}
+\begin{aligned}
+concrete_{kg} &= `r pr_rack * racks * con_fs + con_floor` \left[ m^3\right] \cdot `r d_con` \left[ \frac { kg }{ m^3 } \right] \\
+&= `r (pr_rack * racks * con_fs + con_floor) * d_con` \left[ kg \right]
+\end{aligned}
+\label{eq_2c_4}
+\end{equation}
+
+thermal capacity
+
+\begin{equation}
+\begin{aligned}
+c &= `r (pr_rack * racks * con_fs + con_floor) * d_con` \left[ kg \right] \cdot `r shc_con` \left[ \frac{kJ}{kg \cdot K}\right] \\
+&= `r (pr_rack * racks * con_fs + con_floor) * d_con * shc_con` \left[ \frac{kJ}{K}\right]
+\end{aligned}
+\label{eq_2c_4}
+\end{equation}
+thermal capacity at $20\left[ ^\circ C \right]$
+
+\begin{equation}
+\begin{aligned}
+c_{20\left[ ^\circ C \right]} &= \frac{`r (pr_rack * racks * con_fs + con_floor) * d_con * shc_con` \left[ \frac{kJ}{K}\right]}{ `r K_at_20` \left[ K \right]}\\
+&=`r (pr_rack * racks * con_fs + con_floor) * d_con * shc_con * K_at_20^-1`
+\end{aligned}
+\label{eq_2c_5}
+\end{equation}
+
+-->
+
 ### Question 2d
-Not considered due to time.
+This question is not considered due to other compulsory assignments.
