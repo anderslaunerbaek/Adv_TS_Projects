@@ -96,3 +96,224 @@ Sparring partners:
 \end{itemize}
 
 ## Data
+
+
+`cex4WindDataInterpolated.csv`
+\begin{itemize}
+\item $t$: The time in UTC. This is the end point of the sample period, i.e. the values in the row of $t_i$ is the average between $t_i$ and $t_{i-1}$.
+\item $toy$: The time of year in days.
+\item $p$: The measured average wind power.
+\item $Ws_{1,2,3}$: The 1,2 and 3-hour ahead forecasted wind speed. 
+\item $Wd_{1,2,3}$: The 1,2 and 3-hour ahead forecasted wind direction. 
+\item $T_{1,2,3}$: The 1,2 and 3-hour ahead forecasted temperature. 
+\end{itemize}
+```{r}
+X <- read.table("~/DTU/Courses/Advanced Time Series/Projects/CE_4/r/data/cex4WindDataInterpolated.csv", 
+                sep = ",",
+                header = TRUE, 
+                stringsAsFactors = FALSE)
+X$t <- as.POSIXct(X$t, tz="UTC")
+```
+
+The power curve
+```{r}
+ggplot(X) +
+  geom_point(aes(x = Ws1, y = p, color = "Wind"), alpha = 1/4) +
+  geom_point(aes(x = Ws2, y = p, color = "Wind"), alpha = 1/4) +
+  geom_point(aes(x = Ws3, y = p, color = "Wind"), alpha = 1/4) +
+  labs(x = "a_1,1", y = "p", color = "") +
+  theme_TS()
+```
+
+### Parametric estimate of the power curve
+```{r, echo=TRUE}
+power_curve <- function(wind_speed, par) { 
+  # Logisitics growth model
+  return(par[1] / (1 + par[2] * exp(-par[3] * wind_speed)))
+  # Cubic growth model
+  # return(par * wind_speed^3) 
+  }
+SSE <- function(model, par) { 
+  return(sum((model$p-power_curve(model$Ws1, par))^2, na.rm = TRUE)) 
+  }
+```
+
+
+
+```{r}
+direction_list <- list("N" = list("low" = 360 - 45,
+                                  "mean" = 0,
+                                  "high" = 45),
+                       "E" = list("low" = 45,
+                                  "mean" = 90,
+                                  "high" = 90 + 45),
+                       "S" = list("low" = 180-45,
+                                  "mean" = 180,
+                                  "high" = 180 + 45),
+                       "W" = list("low" = 270-45,
+                                  "mean" = 270,
+                                  "high" = 270 + 45))
+
+# loop resolution
+for (ii in 1:length(direction_list)){
+  #
+  if (names(direction_list)[ii] == "N") {
+    direction_list[[ii]]$idx <-  1:nrow(X) %in% unique(c(which((X$Wd1 > direction_list[[ii]]$low & X$Wd1 <= 360)),
+                                                         which((X$Wd1 > 0 & X$Wd1 <= direction_list[[ii]]$high))))
+  } else {
+    direction_list[[ii]]$idx <- X$Wd1 > direction_list[[ii]]$low & X$Wd1 <= direction_list[[ii]]$high
+  }
+  # not allow NA
+  direction_list[[ii]]$idx[is.na(direction_list[[ii]]$idx)] <- FALSE
+  
+  # number of obs in each
+  direction_list[[ii]]$n <- sum(direction_list[[ii]]$idx)
+  # fit model
+  #direction_list[[ii]]$par <- optim(par = rnorm(1), fn = SSE, model = X[direction_list[[ii]]$idx,])$par
+  direction_list[[ii]]$par <- optim(par = rnorm(3), fn = SSE, model = X[direction_list[[ii]]$idx,])$par
+}
+
+# calculate power curve
+X$p_Wd1_N <- NA
+X$p_Wd1_N[direction_list[[1]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[1]]$idx], par = direction_list[[1]]$par)
+X$p_Wd1_N[direction_list[[2]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[2]]$idx], par = direction_list[[2]]$par)
+X$p_Wd1_N[direction_list[[3]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[3]]$idx], par = direction_list[[3]]$par)
+X$p_Wd1_N[direction_list[[4]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[4]]$idx], par = direction_list[[4]]$par)
+
+# init plot 
+ggplot() + 
+  geom_point(data = X[direction_list[[1]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[1]), alpha = 1/4) +
+  geom_point(data = X[direction_list[[2]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[2]), alpha = 1/4) +
+  geom_point(data = X[direction_list[[3]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[3]), alpha = 1/4) +
+  geom_point(data = X[direction_list[[4]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[4]), alpha = 1/4) +
+  
+  geom_line(data = X[direction_list[[1]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[1]), alpha = 1/1) +
+  geom_line(data = X[direction_list[[2]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[2]), alpha = 1/1) +
+  geom_line(data = X[direction_list[[3]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[3]), alpha = 1/1) +
+  geom_line(data = X[direction_list[[4]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[4]), alpha = 1/1) +
+  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
+  labs(y = "p", x = "Ws1", color = "Wind direction") +
+  theme_TS()
+```
+
+Only done for $Ws1$ and $Wd1$. Could have been done for all the three forecast and then averages..
+
+Lav linear interpolation mellem de fire retninger således jeg kan give en vilkårlig vind retning og sammenligne med kernel smoothing..
+
+make contour plot...
+```{r}
+
+
+# ændre function 
+y_ticks <- c(0,45,90,135,180,225,270,315)
+y_ticks_labels <- c("N","NE","E","SE","S","SW","W","NW")
+# create grid
+grid_res <- 20
+x_seq <- seq(min(X$Ws1,na.rm = TRUE),max(X$Ws1,na.rm = TRUE), len = grid_res)
+y_seq <- seq(0,360, len = grid_res)
+con_melt <- expand.grid(x_seq, y_seq)
+# calculate function
+con_melt$value_par <- sapply(1:nrow(con_melt), function(i) { 
+  return(kernel_estimate(wind_speed = con_melt$Var1[i], wind_direction = con_melt$Var2[i])) 
+  })
+
+ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
+  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
+  scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y = "Wind direction", x = "Wind speed [m/s]", color = "") +
+  theme_TS()
+```
+
+
+
+
+### Non-parametric estimate of the power curve
+Using kernal smooting..
+
+```{r, echo=TRUE}
+# Calculate the weights with an Epanechnikov kernel
+kernelEp <- function(xall, x, h) {
+  u <- abs(xall-x)
+  u <- u / h
+  w <- 3/4 * (1 - u^2)
+  ## Set values with |u|>1 to 0
+  w[abs(u)>1] <- 0
+  return(w)
+}
+
+kernel_estimate <- function(wind_speed, wind_direction, bw = 0.15) {
+  n <- nrow(X)
+  # Bandwidths in each two-dimensional multiplicative kernel relative to the range of x and y
+  hx <- bw * (max(X$Ws1, na.rm = TRUE) - min(X$Ws1, na.rm = TRUE))
+  hy <- bw * (max(X$Wd1, na.rm = TRUE) - min(X$Wd1, na.rm = TRUE))
+  # Calculate the weights
+  wx <- kernelEp(xall = X$Ws1, x = wind_speed, h = hx)
+  wy <- kernelEp(xall = X$Wd1, x = wind_direction, h = hy)
+  # Use multivariate weigths and only the positive
+  w <- wx*wy
+  idx <- w > 0
+  # return NA if all weights are zero
+  if (sum(idx, na.rm = T) == 0) { return(NA) }
+  # Note that this is local first order polynomial regression
+  fit <- lm(p ~ Wd1 + Ws1, weights = w[idx], data = X[idx, c("p", "Ws1", "Wd1")])
+  # predict
+  return(1/n * sum(predict(object = fit, data = data.frame("Ws1" = wind_speed, "Wd1" = wind_direction))))
+}
+```
+
+
+optimize bw by finding the lowest SSE
+
+```{r}
+SSE_bw <- function(x) {
+  residuals <- rep(NA, nrow(X))
+  for (ii in 1:nrow(X)) {
+    residuals[ii] <- X$p[ii] - kernel_estimate(wind_speed = X$Ws1[ii],
+                                               wind_direction = X$Wd1[ii],
+                                               bw = x)
+  }
+  return(sum(residuals^2, na.rm = TRUE))
+}
+
+optimize(SSE_bw, c(0,1))$minimum
+
+```
+
+
+
+make contour plot...
+```{r}
+# calculate power
+con_melt$value_non_par <- sapply(1:nrow(con_melt), function(i) { 
+  return(kernel_estimate(wind_speed = con_melt$Var1[i], wind_direction = con_melt$Var2[i])) 
+  })
+
+
+ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
+  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
+  scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y = "Wind direction", x = "Wind speed [m/s]", color = "") +
+  theme_TS()
+```
+
+
+
+
+How to find the optimal bandwith
+```{r}
+
+
+
+ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
+  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
+  scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
+  theme_TS()
+```
+
+
+
+
+
+
+

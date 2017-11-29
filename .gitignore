@@ -5,6 +5,9 @@
 *.pdf
 CE_1/CE_1_files/*
 CE_1/CE_1_cache/*
+
+
+
 CE_1/CE_1_cache/latex/*
 
 CE_2/CE_2_files/*
@@ -15,3 +18,6 @@ CE_3/CE_3_files/*
 CE_3/CE_3_cache/*
 CE_3/CE_3_cache/latex/*
 
+CE_4/CE_4_files/*
+CE_4/CE_4_cache/*
+CE_4/r/data/*
