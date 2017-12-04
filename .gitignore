@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 *.pdf
+*.Rda
 CE_1/CE_1_files/*
 CE_1/CE_1_cache/*
 

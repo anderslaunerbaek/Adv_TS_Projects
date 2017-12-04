@@ -31,6 +31,8 @@ kable_format <- list(small.mark = ",",
                      big.interval = 3L)
 
 library(ggplot2)
+library(akima)
+library(dplyr)
 theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
   theme_bw(base_size = base_size, base_family = base_family) %+replace%
     theme(panel.background = element_blank(), 
@@ -95,64 +97,121 @@ Sparring partners:
 \item Marie Mørk (s112770)
 \end{itemize}
 
-## Data
+## Wind Power Forecasting
 
-
-`cex4WindDataInterpolated.csv`
+I have chosen to work with the wind power forecasting challenge. The modelling of this exercise is based upon the `cex4WindDataInterpolated.csv` data set, which has following properties.
 \begin{itemize}
-\item $t$: The time in UTC. This is the end point of the sample period, i.e. the values in the row of $t_i$ is the average between $t_i$ and $t_{i-1}$.
+\item $t\left[h \right]$: The time in UTC. This is the end point of the sample period, i.e. the values in the row of $t_i$ is the average between $t_i$ and $t_{i-1}$.
 \item $toy$: The time of year in days.
 \item $p$: The measured average wind power.
-\item $Ws_{1,2,3}$: The 1,2 and 3-hour ahead forecasted wind speed. 
-\item $Wd_{1,2,3}$: The 1,2 and 3-hour ahead forecasted wind direction. 
-\item $T_{1,2,3}$: The 1,2 and 3-hour ahead forecasted temperature. 
+\item $Ws_{1,2,3} \left[\frac{m}{s} \right] $: The 1,2 and 3-hour ahead forecasted wind speed. 
+\item $Wd_{1,2,3} \left[ deg \right]$: The 1,2 and 3-hour ahead forecasted wind direction. 
+\item $T_{1,2,3} \left[ K \right]$: The 1,2 and 3-hour ahead forecasted temperature. 
 \end{itemize}
+
+The data has been colloected from the wind farm Klim, which is located close by Fjerritslev in northwest of Jutland.
+The signals have been preprocessen so that the production and forecasts for the given hour is in the same row.
+
 ```{r}
 X <- read.table("~/DTU/Courses/Advanced Time Series/Projects/CE_4/r/data/cex4WindDataInterpolated.csv", 
                 sep = ",",
                 header = TRUE, 
                 stringsAsFactors = FALSE)
 X$t <- as.POSIXct(X$t, tz="UTC")
+deg_pm <- 20
+initial_values <- c(17.0253818 , 0.4149709 ,11.8443732)
 ```
 
-The power curve
-```{r}
+###  Estimate the Power Curve
+The initial hint is to estimate the power curve as function of wind direction and of the wind speed. Figure \ref{fig_1_1_1} shows a contour plot illustrating the power curve $p$ as function of the wind speed $Ws1$ and the wind direction $Wd1$ where `NA`s are excluded.
+
+```{r, fig.cap="\\label{fig_1_1_1}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+y_ticks <- c(0,45,90,135,180,225,270,315)
+y_ticks_labels <- c("N: 0","NE: 45","E: 90","SE: 135","S: 180","SW: 225","W: 270","NW: 315")
+idx <- !is.na(X$Ws1) & !is.na(X$Wd1) & !is.na(X$p)
+interp2xyz(interp(x=X$Ws1[idx], y=X$Wd1[idx], z=X$p[idx], duplicate="mean"), data.frame=TRUE) %>%
+  filter(!is.na(z)) %>%
+  tbl_df() %>%
+  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  geom_tile() + 
+  geom_contour(color = "white", alpha = 0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white") + 
+  scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
+  theme_TS()
+```
+Design properties according to figure \ref{fig_1_1_1}:
+\begin{itemize}
+\item TODO
+\end{itemize}
+
+\newpage
+
+Figure \ref{fig_1_1} shows the power curve as function of $Ws1$. 
+```{r, fig.cap="\\label{fig_1_1}Plot of power as function of forecasted wind, ws1."}
 ggplot(X) +
-  geom_point(aes(x = Ws1, y = p, color = "Wind"), alpha = 1/4) +
-  geom_point(aes(x = Ws2, y = p, color = "Wind"), alpha = 1/4) +
-  geom_point(aes(x = Ws3, y = p, color = "Wind"), alpha = 1/4) +
-  labs(x = "a_1,1", y = "p", color = "") +
+  geom_point(aes(x = Ws1, y = p, color = "Wind, Ws1"), alpha = 1/4) +
+  #geom_point(aes(x = Ws2, y = p, color = "Wind"), alpha = 1/4) +
+  #geom_point(aes(x = Ws3, y = p, color = "Wind"), alpha = 1/4) +
+  labs(y = "p [kW]", x = "Wind speed [m/s]", color = "") +
   theme_TS()
 ```
 
-### Parametric estimate of the power curve
+I will estimate the power curve for $Ws1$ and $Wd1$ and assume it is possible to use the same estimates for $Ws2$, $Wd2$ and $Ws3$, $Wd3$. 
+
+\newpage
+#### Parametric estimate of the power curve
+I first idea was to split the majority of the observations into four categories; $N$, $E$, $S$ and $W$. Those four categories will contain observations which forefills following: $N = 0 \pm `r deg_pm`\left[deg \right] = \left[ `r 360-deg_pm`,\;`r 0+deg_pm` \right]\left[deg \right]$. Same patterns follows for $E = 90 \pm `r deg_pm`\left[deg \right]$, $S = 180 \pm `r deg_pm`\left[deg \right]$ and $W = 270 \pm `r deg_pm`\left[deg \right]$.
+
+There will be performed linear interpolationed for observations which are between the mentioned intervals.
+
+The power curve as function of the wind speed looks like a logistic growth model, figure \ref{fig_1_1}. Equation \ref{eq_1_1} shows the model which will be used to estimate the power production for a given wind directions. The observations will be subsetted for a given wind direction, fx. all observations which are within: $N = 0 \pm `r deg_pm`\left[deg \right]$ will be used to find the optimal parameter for $L$, $k$ and $ws_0$ w.r.t. the SSE given in eqn. \ref{eq_1_2}.
+
+\begin{equation}
+\begin{aligned}
+pc_{par}\left( ws \right) = \frac{L}{1 + exp^{-k \cdot (ws - ws_0)}}
+\end{aligned}
+\label{eq_1_1}
+\end{equation}
+
+
+\begin{equation}
+\begin{aligned}
+SSE = \sum_{i=1}^{n}\left( p_i -\hat { pc_{par,i} }  \right) ^2
+\end{aligned}
+\label{eq_1_2}
+\end{equation}
+
+The implementations of eqn \ref{eq_1_1} and eqn \ref{eq_1_2} are given below. 
+
 ```{r, echo=TRUE}
-power_curve <- function(wind_speed, par) { 
-  # Logisitics growth model
-  return(par[1] / (1 + par[2] * exp(-par[3] * wind_speed)))
-  # Cubic growth model
-  # return(par * wind_speed^3) 
-  }
+# parametric power curve estimation
+pc_par <- function(wind_speed, par) { 
+  # Logistic growth model
+  return(par[1] / (1 + exp(-par[2] * (wind_speed - par[3]))))
+}
+# sum of squared residuals
 SSE <- function(model, par) { 
-  return(sum((model$p-power_curve(model$Ws1, par))^2, na.rm = TRUE)) 
+  return(sum((model$p - pc_par(model$Ws1, par))^2, na.rm = TRUE)) 
   }
 ```
 
+The same apporach as in Computer Exercise XX have been used to estimate the three parameters w.r.t. the SSE, eqn \ref{eq_1_2}. The optimizations are based upon following parameters: $L = `r round(initial_values[1],3)`$, $k = `r round(initial_values[2],3)`$ and $ws_0 = `r round(initial_values[3],3)`$.
 
 
-```{r}
-direction_list <- list("N" = list("low" = 360 - 45,
+```{r, fig.cap="\\label{fig_1_2}Plot of power as function of forecasted wind speed for the four categories of wind directions."}
+direction_list <- list("N" = list("low" = 360-deg_pm,
                                   "mean" = 0,
-                                  "high" = 45),
-                       "E" = list("low" = 45,
+                                  "high" = deg_pm),
+                       "E" = list("low" = 90-deg_pm,
                                   "mean" = 90,
-                                  "high" = 90 + 45),
-                       "S" = list("low" = 180-45,
+                                  "high" = 90+deg_pm),
+                       "S" = list("low" = 180-deg_pm,
                                   "mean" = 180,
-                                  "high" = 180 + 45),
-                       "W" = list("low" = 270-45,
+                                  "high" = 180+deg_pm),
+                       "W" = list("low" = 270-deg_pm,
                                   "mean" = 270,
-                                  "high" = 270 + 45))
+                                  "high" = 270+deg_pm))
 
 # loop resolution
 for (ii in 1:length(direction_list)){
@@ -165,20 +224,18 @@ for (ii in 1:length(direction_list)){
   }
   # not allow NA
   direction_list[[ii]]$idx[is.na(direction_list[[ii]]$idx)] <- FALSE
-  
   # number of obs in each
   direction_list[[ii]]$n <- sum(direction_list[[ii]]$idx)
   # fit model
-  #direction_list[[ii]]$par <- optim(par = rnorm(1), fn = SSE, model = X[direction_list[[ii]]$idx,])$par
-  direction_list[[ii]]$par <- optim(par = rnorm(3), fn = SSE, model = X[direction_list[[ii]]$idx,])$par
+  direction_list[[ii]]$par <- optim(par = initial_values, fn = SSE, model = X[direction_list[[ii]]$idx,])$par
 }
 
 # calculate power curve
 X$p_Wd1_N <- NA
-X$p_Wd1_N[direction_list[[1]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[1]]$idx], par = direction_list[[1]]$par)
-X$p_Wd1_N[direction_list[[2]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[2]]$idx], par = direction_list[[2]]$par)
-X$p_Wd1_N[direction_list[[3]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[3]]$idx], par = direction_list[[3]]$par)
-X$p_Wd1_N[direction_list[[4]]$idx] <- power_curve(wind_speed = X$Ws1[direction_list[[4]]$idx], par = direction_list[[4]]$par)
+X$p_Wd1_N[direction_list[[1]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[1]]$idx], par = direction_list[[1]]$par)
+X$p_Wd1_N[direction_list[[2]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[2]]$idx], par = direction_list[[2]]$par)
+X$p_Wd1_N[direction_list[[3]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[3]]$idx], par = direction_list[[3]]$par)
+X$p_Wd1_N[direction_list[[4]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[4]]$idx], par = direction_list[[4]]$par)
 
 # init plot 
 ggplot() + 
@@ -196,42 +253,127 @@ ggplot() +
   theme_TS()
 ```
 
-Only done for $Ws1$ and $Wd1$. Could have been done for all the three forecast and then averages..
+Figure \ref{fig_1_2} shows the four power curves as function of the wind speed ($Ws1$) for the given wind direction interval. 
+The wind farm has a better power production, when the wind direction is either $S = 180 \pm `r deg_pm`\left[deg \right]$ or $N = 0 \pm `r deg_pm`\left[deg \right]$, according to figure \ref{fig_1_2}.
 
-Lav linear interpolation mellem de fire retninger således jeg kan give en vilkårlig vind retning og sammenligne med kernel smoothing..
-
-make contour plot...
+The estimated parameters for Estimated values for $L$, $k$ and $ws_0$ are given in table \ref{tb_1_1} each wind interval.
 ```{r}
+tmp <- t(data.frame(c(names(direction_list)[1],round(direction_list[[1]]$par,3)),
+                  c(names(direction_list)[2],round(direction_list[[2]]$par,3)),
+                  c(names(direction_list)[3],round(direction_list[[3]]$par,3)),
+                  c(names(direction_list)[4],round(direction_list[[4]]$par,3))))
+knitr::kable(tmp, format.args = kable_format,
+             row.names = FALSE, 
+             col.names = c(paste0("Wind direction, +-",deg_pm,"[deg]"),"L","k","ws0"),
+             caption = "\\label{tb_1_1}This table shows the estimated values for the parametric estimate of the power curve.")
+
+```
 
 
-# ændre function 
-y_ticks <- c(0,45,90,135,180,225,270,315)
-y_ticks_labels <- c("N","NE","E","SE","S","SW","W","NW")
+```{r}
+range01 <- function(x) { (x-min(x))/(max(x)-min(x)) }
+ret_p <- function(ws,wd,idx1,idx2) {
+  p_1 <- pc_par(wind_speed = ws, par = direction_list[[idx1]]$par)
+  p_2 <- pc_par(wind_speed = ws, par = direction_list[[idx2]]$par)
+  ratio <- range01(c(direction_list[[idx1]]$high, wd, direction_list[[idx2]]$low))[2]
+  return(p_1 *  ratio + (1-ratio) * p_2)
+}
+
+pc_par_inter <- function(ws, wd) {
+  # NE
+  if (direction_list[[1]]$high < wd & direction_list[[2]]$low >= wd) { 
+    power_re <- ret_p(ws,wd,1,2)
+  }
+  # E
+  else if (direction_list[[2]]$low < wd & direction_list[[2]]$high <= wd) { 
+    power_re <- pc_par(wind_speed = ws, par = direction_list[[2]]$par)
+  } 
+  # SE
+  else if (direction_list[[2]]$high < wd & direction_list[[3]]$low >= wd) { 
+    power_re <- ret_p(ws,wd,2,3)
+  }
+  # S
+  else if (direction_list[[3]]$low < wd & direction_list[[3]]$high <= wd) { 
+    power_re <- pc_par(wind_speed = ws, par = direction_list[[3]]$par)
+  }
+  # SW
+  else if (direction_list[[3]]$high < wd & direction_list[[4]]$low >= wd) { 
+    power_re <- ret_p(ws,wd,3,4)
+  }
+  # W
+  else if (direction_list[[4]]$low < wd & direction_list[[4]]$high <= wd) { 
+    power_re <- pc_par(wind_speed = ws, par = direction_list[[4]]$par)
+  }
+  # NW
+  else if (direction_list[[4]]$high < wd & direction_list[[1]]$low >= wd) { 
+    power_re <- ret_p(ws,wd,4,1)
+  }
+  # N
+  else { 
+    power_re <- pc_par(wind_speed = ws, par = direction_list[[1]]$par)
+  }
+  #
+  return(power_re)
+  }
+```
+
+
+Figure \ref{fig_1_4} shows the contour plot of the parametric model. 
+```{r, fig.cap="\\label{fig_1_4}Contour plot of power production as function of wind direction and speed by usin the parametric model."}
 # create grid
-grid_res <- 20
+grid_res <- 50
 x_seq <- seq(min(X$Ws1,na.rm = TRUE),max(X$Ws1,na.rm = TRUE), len = grid_res)
 y_seq <- seq(0,360, len = grid_res)
 con_melt <- expand.grid(x_seq, y_seq)
 # calculate function
 con_melt$value_par <- sapply(1:nrow(con_melt), function(i) { 
-  return(kernel_estimate(wind_speed = con_melt$Var1[i], wind_direction = con_melt$Var2[i])) 
+  return(pc_par_inter(con_melt$Var1[i], con_melt$Var2[i])) 
   })
-
-ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
-  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
+idx <- !is.na(con_melt$value_par)
+interp2xyz(interp(x=con_melt$Var1[idx], y=con_melt$Var2[idx], z=con_melt$value_par[idx], duplicate="mean"), data.frame=TRUE) %>%
+  filter(!is.na(z)) %>%
+  tbl_df() %>%
+  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  geom_tile() + 
+  geom_contour(color = "white", alpha = 0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white") + 
   scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
-  labs(y = "Wind direction", x = "Wind speed [m/s]", color = "") +
+  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
   theme_TS()
+
+tmp <- X %>% dplyr::arrange(desc(p)) %>% dplyr::select(p, Ws1, Wd1)
+tmp_top <- 10
+```
+I do not think the representation in figure \ref{fig_1_4} shows well representation of the power curve as function of the wind speed and of the wind direction. The max recoded power production is $`r tmp[[1]][1]`$ with a wind speed of $`r tmp[[2]][1]` \left[ \frac{m}{s} \right]$ and with a wind direction of $`r tmp[[3]][1]` \left[ deg \right]$. Table \ref{tb_1_2} shows top `r tmp_top` observations which have the highest power production. From the table \ref{tb_1_2} below and from the intial contour plot in figure \ref{fig_1_1_1}, it is clear to see, that the parametric model does not make a well representation of the real power curve.
+
+```{r}
+knitr::kable(tmp[1:tmp_top,], format.args = kable_format,
+             row.names = FALSE, 
+             #col.names = c(paste0("Wind direction, +-",deg_pm,"[deg]"),"L","k","ws0"),
+             caption = "\\label{tb_1_2}This table shows the estimated values for the parametric estimate of the power curve.")
+sample_size = 0.1
+splt_test <- 0.1
+k_fold <- 10
 ```
 
 
+\newpage
+#### Non-parametric estimate of the power curve
+A non-parametric approach has been caried out in order to create a better estimate of the multidimensionel power curve. I have chosen to use the kernel smoothing with the Epanechnikov kernel, as we did in Computer Exercise X.
 
+There are servel benefits by using a kernel estimate instead of the parametric estimate. The parametric approach has some limitation regarding the resolution of the wind direction. 
+<!--
+\begin{equation}
+\begin{aligned}
+pc_{nonpar}\left( ws, wd \right) = 
+\end{aligned}
+\label{eq_1_3}
+\end{equation}
+-->
 
-### Non-parametric estimate of the power curve
-Using kernal smooting..
-
+The approach to estimate the multidimensinal power curve by using epanechnikov kernel are heavely inspired by Computer Exercise X. The implementation of the non-parametric model of the power curve is given below:
 ```{r, echo=TRUE}
-# Calculate the weights with an Epanechnikov kernel
+# the epanechnikov kernel
 kernelEp <- function(xall, x, h) {
   u <- abs(xall-x)
   u <- u / h
@@ -240,9 +382,8 @@ kernelEp <- function(xall, x, h) {
   w[abs(u)>1] <- 0
   return(w)
 }
-
-kernel_estimate <- function(wind_speed, wind_direction, bw = 0.15) {
-  n <- nrow(X)
+# non parametric model
+pc_nonpar <- function(wind_speed, wind_direction, bw) {
   # Bandwidths in each two-dimensional multiplicative kernel relative to the range of x and y
   hx <- bw * (max(X$Ws1, na.rm = TRUE) - min(X$Ws1, na.rm = TRUE))
   hy <- bw * (max(X$Wd1, na.rm = TRUE) - min(X$Wd1, na.rm = TRUE))
@@ -251,69 +392,176 @@ kernel_estimate <- function(wind_speed, wind_direction, bw = 0.15) {
   wy <- kernelEp(xall = X$Wd1, x = wind_direction, h = hy)
   # Use multivariate weigths and only the positive
   w <- wx*wy
-  idx <- w > 0
+  ok <- w > 0
   # return NA if all weights are zero
-  if (sum(idx, na.rm = T) == 0) { return(NA) }
+  if (sum(ok, na.rm = T) == 0) { return(NA) }
   # Note that this is local first order polynomial regression
-  fit <- lm(p ~ Wd1 + Ws1, weights = w[idx], data = X[idx, c("p", "Ws1", "Wd1")])
+  fit <- lm(p ~ Wd1 + Ws1, weights = w[ok], data = X[ok, c("p", "Ws1", "Wd1")])
   # predict
-  return(1/n * sum(predict(object = fit, data = data.frame("Ws1" = wind_speed, "Wd1" = wind_direction))))
+  mean(predict(object = fit, data = data.frame("Ws1" = wind_speed, "Wd1" = wind_direction)))
 }
 ```
 
+We want to optimize $bw$ w.r.t. the MSE1, eqn \ref{eq_1_4}\footnote{p. 45, Modelling Non-linear and Non-stationary Time Series by Henrik Madsen and Jan Holst.} in the non-parametric model.
 
-optimize bw by finding the lowest SSE
+\begin{equation}
+\begin{aligned}
+MSE1\left( h \right) = \frac{1}{n}\sum_{i=1}^{n}\left( p_i -\hat { pc_{nonpar,i} }  \right) ^2
+\end{aligned}
+\label{eq_1_4}
+\end{equation}
+
+I has chosen to randomly sample $`r sample_size*100`\%$ of complete cases of the total $`r nrow(X)`$ observations in order to increase computation time in the optimization process of $bw$. 
+It has been chosen to use `r k_fold`-fold cross-validation where the randomly sample observations have been splited into $`r (1-splt_test)*100`\%$ train data and $`r splt_test*100`\%$ test data.
+
+The implementated of eqn. \ref{eq_1_4} is given below:
+```{r, echo=TRUE}
+# MSE1 for selecting bandwidth
+MSE1_bw <- function(x, idx) {
+  residuals <- sapply(idx, function(ii) { 
+    return((X$p[ii] - pc_nonpar(wind_speed = X$Ws1[ii],
+                               wind_direction = X$Wd1[ii], 
+                               bw = x))^2)
+    })
+  return(mean(residuals, na.rm = TRUE))
+}
+```
+where `idx` are used to subset the data set.
+
+$bw$ has be to chosen between $[0;\;1]$. $bw$ scales the bandwidths ($hx$ and $hy$) in each two-dimensional multiplicative kernel relative to the range of $Ws1$ and to the range of $Wd1$.
+If $h*$ is large the variance is small but the bias is large and vice versa if $h*$ is small the variance is large but the bias is small. 
 
 ```{r}
-SSE_bw <- function(x) {
-  residuals <- rep(NA, nrow(X))
-  for (ii in 1:nrow(X)) {
-    residuals[ii] <- X$p[ii] - kernel_estimate(wind_speed = X$Ws1[ii],
-                                               wind_direction = X$Wd1[ii],
-                                               bw = x)
+# cv_bw <- function(sample_size) {
+#   #
+#   idx <- which(!is.na(X$Ws1) & !is.na(X$Wd1) & !is.na(X$p))
+#   set.seed(22)
+#   idx <- sample(idx, size = as.integer(nrow(X) * sample_size), replace = FALSE)
+#   cv_fold <- caret::createDataPartition(y = idx, times = k_fold, p = (1-splt_test))
+#   # init list
+#   cv_list <- list()
+#   #
+#   for (ii in 1:length(cv_fold)) {
+#     print(paste0("Fold: cv_", ii))
+#     cv_list[[paste0("cv_", ii)]] = list()
+#     # create test and train
+#     idx_test <- idx[-cv_fold[[ii]]]
+#     idx_train <- idx[cv_fold[[ii]]]
+#     # this one should minimize the obj per default
+#     tmp_opt <- optimize(MSE1_bw, c(0,1), idx = idx_train, maximum = FALSE, tol = 0.00001)$minimum
+#     #
+#     cv_list[[paste0("cv_", ii)]]$idx_test <- idx[-cv_fold[[ii]]]
+#     cv_list[[paste0("cv_", ii)]]$idx_train <- idx[cv_fold[[ii]]]
+#     cv_list[[paste0("cv_", ii)]]$opt_bw <- tmp_opt
+#     cv_list[[paste0("cv_", ii)]]$opt_obj <- MSE1_bw(tmp_opt, idx_test)
+#     #tmp_obj <- SSE_bw(tmp_opt, idx_test)
+#     print(paste(c(cv_list[[paste0("cv_", ii)]]$opt_bw, cv_list[[paste0("cv_", ii)]]$opt_obj), sep = ", "))
+#   }
+#   # find lowest SSE
+#   return(cv_list)
+# }
+# #
+# cv_list <- cv_bw(sample_size)
+# save(cv_list, file = "~/DTU/Courses/Advanced Time Series/Projects/CE_4/cv_list.Rda")
+load("~/DTU/Courses/Advanced Time Series/Projects/CE_4/cv_list.Rda")
+# get best fold
+tmp_bw <- NA
+tmp_obj <- 1000000
+fold <- NA
+for (ii in 1:length(cv_list)) {
+
+  opt_bw <- cv_list[[paste0("cv_", ii)]]$opt_bw
+  opt_obj <- cv_list[[paste0("cv_", ii)]]$opt_obj
+
+  if (tmp_obj > opt_obj) {
+    tmp_bw <- opt_bw
+    tmp_obj <- opt_obj
+    fold <- ii
   }
-  return(sum(residuals^2, na.rm = TRUE))
 }
-
-optimize(SSE_bw, c(0,1))$minimum
-
+opt_bw <- tmp_bw
+# opt_bw <- 0.0145142985626031
 ```
 
+The smallest MSE1 is $`r tmp_obj`$ in fold $`r fold`$ and has the optimal value of $bw = `r opt_bw`$.
 
-
-make contour plot...
-```{r}
+Figure \ref{fig_1_5} shows the contour plot for the non-parametric model, using the optimal bandwidth scaling parameter $bw = `r opt_bw`$.
+```{r, fig.cap="\\label{fig_1_5}Contour plot of power production as function of wind direction and speed by usin the non-parametric model."}
 # calculate power
 con_melt$value_non_par <- sapply(1:nrow(con_melt), function(i) { 
-  return(kernel_estimate(wind_speed = con_melt$Var1[i], wind_direction = con_melt$Var2[i])) 
+  return(pc_nonpar(wind_speed = con_melt$Var1[i], 
+                   wind_direction = con_melt$Var2[i], 
+                   bw = opt_bw)) 
   })
 
-
-ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
-  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
-  scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
-  labs(y = "Wind direction", x = "Wind speed [m/s]", color = "") +
-  theme_TS()
-```
-
-
-
-
-How to find the optimal bandwith
-```{r}
-
-
-
-ggplot(con_melt, aes(x = Var1, y = Var2, z = value_non_par)) +
-  stat_contour(geom="contour", alpha = 1/2, binwidth = 0.005) +
+idx <- !is.na(con_melt$value_non_par)
+interp2xyz(interp(x=con_melt$Var1[idx], y=con_melt$Var2[idx], z=con_melt$value_non_par[idx], duplicate="mean"), data.frame=TRUE) %>%
+  filter(!is.na(z)) %>%
+  tbl_df() %>%
+  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  geom_tile() + 
+  geom_contour(color = "white", alpha = 0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white") + 
   scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
   labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
   theme_TS()
 ```
 
+Figure \ref{fig_1_5} shows a much better representation of the two-dimensional power curve compared to the parametric model in figure \ref{fig_1_4}. The contour plot in figure \ref{fig_1_5} is very similar to the initial contour plot, figure \ref{fig_1_1_1}, which was based upon the raw data. 
+\begin{itemize}
+\item TODO
+\end{itemize}
+
+
+#### Comments on the Parametric Model and the Non-parametric Model
 
 
 
+<!--
+Figure \ref{fig_1_6}
+```{r, fig.cap="\\label{fig_1_6}"}
+idx <- which(!is.na(X$Wd1) & !is.na(X$Ws1))
+X$p_Wd1_par <- NA
+X$p_Wd1_par[idx] <- sapply(idx, function(i) { 
+  return(pc_par_inter(ws = X$Ws1[i], wd = X$Wd1[i])) 
+  })
 
+X$p_Wd1_non_par <- NA
+X$p_Wd1_non_par[idx] <- sapply(idx, function(i) { 
+  return(pc_nonpar(wind_speed = X$Ws1[i], 
+                   wind_direction = X$Wd1[i], 
+                   bw = opt_bw)) 
+  })
+
+# # init plot 
+ggplot() + 
+  geom_line(data = X, aes(x = Ws1, y = p_Wd1_par, color = "Parametric"), alpha = 1/2) +
+  geom_line(data = X, aes(x = Ws1, y = p_Wd1_non_par, color = paste("Ep. kernel. bw=",round(opt_bw,3))), alpha = 1/2) +
+  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
+  labs(y = "p", x = "Ws1", color = "Wind direction") +
+  theme_TS()
+```
+
+```{r}
+ggplot() + 
+  geom_line(data = X, aes(x = Ws1, y = (p_Wd1_non_par-p), color = paste("Ep. kernel. bw=",round(opt_bw,3))), alpha = 1/4) +
+  geom_line(data = X, aes(x = Ws1, y = (p_Wd1_par-p), color = "Parametric"), alpha = 1/4) +
+  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
+  labs(y = "p", x = "Ws1", color = "Wind direction") +
+  theme_TS()
+```
+-->
+
+
+\newpage
+## Lets Make Some Models
+
+
+\begin{equation}
+\begin{aligned}
+1
+\end{aligned}
+\label{eq_2_1}
+\end{equation}
 
 
