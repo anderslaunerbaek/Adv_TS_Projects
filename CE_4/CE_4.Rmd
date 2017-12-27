@@ -9,38 +9,38 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-rm(list = ls())
+rm(list=ls())
 
-knitr::opts_chunk$set(echo = FALSE, 
-                      include = TRUE,
-                      warning = FALSE,
-                      fig.width = 8, fig.height = 4,
+knitr::opts_chunk$set(echo=FALSE, 
+                      include=TRUE,
+                      warning=FALSE,
+                      fig.width=8, fig.height=4,
                       fig.show='hold', fig.align='center',
                       
-                      eval = TRUE, 
-                      tidy = TRUE, 
-                      dev = 'pdf', 
-                      cache = TRUE, fig.pos = "th!")
+                      eval=TRUE, 
+                      tidy=TRUE, 
+                      dev='pdf', 
+                      cache=TRUE, fig.pos="th!")
 
-kable_format <- list(small.mark = ",",
-                     big.mark = ',',
-                     decimal.mark = '.',
-                     nsmall = 3,
-                     digits = 3,
-                     scientific = FALSE,
-                     big.interval = 3L)
+kable_format <- list(small.mark=",",
+                     big.mark=',',
+                     decimal.mark='.',
+                     nsmall=3,
+                     digits=3,
+                     scientific=FALSE,
+                     big.interval=3L)
 
 library(ggplot2)
 library(akima)
 library(dplyr)
-theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
-  theme_bw(base_size = base_size, base_family = base_family) %+replace%
-    theme(panel.background = element_blank(), 
-          panel.border = element_blank(),
-          panel.grid = element_blank(),
-          axis.text = element_text(size = base_size, face = face, family = base_family),
-          axis.title = element_text(size = base_size, face = face, family = base_family),
-          legend.text = element_text(size = base_size, face = face, family = base_family))
+theme_TS <- function(base_size=9, base_family="", face="plain"){
+  theme_bw(base_size=base_size, base_family=base_family) %+replace%
+    theme(panel.background=element_blank(), 
+          panel.border=element_blank(),
+          panel.grid=element_blank(),
+          axis.text=element_text(size=base_size, face=face, family=base_family),
+          axis.title=element_text(size=base_size, face=face, family=base_family),
+          legend.text=element_text(size=base_size, face=face, family=base_family))
 }
 
 # Multiple plot function
@@ -59,7 +59,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
 
-  numPlots = length(plots)
+  numPlots=length(plots)
 
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
@@ -67,7 +67,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     # ncol: Number of columns of plots
     # nrow: Number of rows needed, calculated from # of cols
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                    ncol = cols, nrow = ceiling(numPlots/cols))
+                    ncol=cols, nrow=ceiling(numPlots/cols))
   }
 
  if (numPlots==1) {
@@ -76,15 +76,15 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   } else {
     # Set up the page
     grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    pushViewport(viewport(layout=grid.layout(nrow(layout), ncol(layout))))
 
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      matchidx <- as.data.frame(which(layout == i, arr.ind=TRUE))
 
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
+      print(plots[[i]], vp=viewport(layout.pos.row=matchidx$row,
+                                      layout.pos.col=matchidx$col))
     }
   }
 }
@@ -97,33 +97,33 @@ Sparring partners:
 \item Marie Mørk (s112770)
 \end{itemize}
 
-## Wind Power Forecasting
+# Wind Power Forecasting
 
-I have chosen to work with the wind power forecasting challenge. The modelling of this exercise is based upon the `cex4WindDataInterpolated.csv` data set, which has following properties.
+I have chosen to work with the wind power forecasting challenge. The modelling of this exercise is based upon the `cex4WindDataInterpolated.csv` data set which has following properties:
 \begin{itemize}
 \item $t\left[h \right]$: The time in UTC. This is the end point of the sample period, i.e. the values in the row of $t_i$ is the average between $t_i$ and $t_{i-1}$.
 \item $toy$: The time of year in days.
-\item $p$: The measured average wind power.
+\item $p \left[kW\right]$: The measured average wind power.
 \item $Ws_{1,2,3} \left[\frac{m}{s} \right] $: The 1,2 and 3-hour ahead forecasted wind speed. 
 \item $Wd_{1,2,3} \left[ deg \right]$: The 1,2 and 3-hour ahead forecasted wind direction. 
 \item $T_{1,2,3} \left[ K \right]$: The 1,2 and 3-hour ahead forecasted temperature. 
 \end{itemize}
 
-The data has been colloected from the wind farm Klim, which is located close by Fjerritslev in northwest of Jutland.
-The signals have been preprocessen so that the production and forecasts for the given hour is in the same row.
+The data has been collected at the wind farm Klim located close by Fjerritslev in Northwest of Jutland.
+The measurements have been preprocessed so that the production and forecasts for the given hour is in the same row.
 
 ```{r}
 X <- read.table("~/DTU/Courses/Advanced Time Series/Projects/CE_4/r/data/cex4WindDataInterpolated.csv", 
-                sep = ",",
-                header = TRUE, 
-                stringsAsFactors = FALSE)
+                sep=",",
+                header=TRUE, 
+                stringsAsFactors=FALSE)
 X$t <- as.POSIXct(X$t, tz="UTC")
 deg_pm <- 20
 initial_values <- c(17.0253818 , 0.4149709 ,11.8443732)
 ```
 
-###  Estimate the Power Curve
-The initial hint is to estimate the power curve as function of wind direction and of the wind speed. Figure \ref{fig_1_1_1} shows a contour plot illustrating the power curve $p$ as function of the wind speed $Ws1$ and the wind direction $Wd1$ where `NA`s are excluded.
+##  Estimate the Power Curve
+The initial hint was to estimate the power curve as function of wind direction and of the wind speed. Figure \ref{fig_1_1_1} shows a contour plot illustrating the power curve $p$ as function of the wind speed $Ws1$ and the wind direction $Wd1$ where `NA`s are excluded.
 
 ```{r, fig.cap="\\label{fig_1_1_1}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
 y_ticks <- c(0,45,90,135,180,225,270,315)
@@ -132,44 +132,39 @@ idx <- !is.na(X$Ws1) & !is.na(X$Wd1) & !is.na(X$p)
 interp2xyz(interp(x=X$Ws1[idx], y=X$Wd1[idx], z=X$p[idx], duplicate="mean"), data.frame=TRUE) %>%
   filter(!is.na(z)) %>%
   tbl_df() %>%
-  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  ggplot(aes(x=x, y=y, z=z, fill=z)) + 
   geom_tile() + 
-  geom_contour(color = "white", alpha = 0.5) + 
-  scale_fill_distiller(palette="Spectral", na.value="white") + 
+  geom_contour(color="white", alpha=0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white", name="Power [kW]") + 
   scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
-  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
+  labs(y="Wind direction [deg]", x="Wind speed [m/s]", color="") +
   theme_TS()
 ```
-Design properties according to figure \ref{fig_1_1_1}:
-\begin{itemize}
-\item TODO
-\end{itemize}
+The illustrations in figure \ref{fig_1_1_1} shows that the peak performance in the power production peaks with wind speed around $20[m/s]$. The wind directions does influence the production as well.
 
 \newpage
 
-Figure \ref{fig_1_1} shows the power curve as function of $Ws1$. 
+Figure \ref{fig_1_1} illustrates the power $p$ as function of wind speed $Ws1$. 
 ```{r, fig.cap="\\label{fig_1_1}Plot of power as function of forecasted wind, ws1."}
 ggplot(X) +
-  geom_point(aes(x = Ws1, y = p, color = "Wind, Ws1"), alpha = 1/4) +
-  #geom_point(aes(x = Ws2, y = p, color = "Wind"), alpha = 1/4) +
-  #geom_point(aes(x = Ws3, y = p, color = "Wind"), alpha = 1/4) +
-  labs(y = "p [kW]", x = "Wind speed [m/s]", color = "") +
+  geom_point(aes(x=Ws1, y=p, color="Ws1"), alpha=1/4) +
+  labs(y="p [kW]", x="Wind speed [m/s]", color="Power Curve") +
   theme_TS()
 ```
 
-I will estimate the power curve for $Ws1$ and $Wd1$ and assume it is possible to use the same estimates for $Ws2$, $Wd2$ and $Ws3$, $Wd3$. 
+I will estimate the power curve for $Ws1$ and $Wd1$ and assume the estimates are valid for $Ws2$, $Wd2$ and $Ws3$, $Wd3$. 
 
 \newpage
-#### Parametric estimate of the power curve
-I first idea was to split the majority of the observations into four categories; $N$, $E$, $S$ and $W$. Those four categories will contain observations which forefills following: $N = 0 \pm `r deg_pm`\left[deg \right] = \left[ `r 360-deg_pm`,\;`r 0+deg_pm` \right]\left[deg \right]$. Same patterns follows for $E = 90 \pm `r deg_pm`\left[deg \right]$, $S = 180 \pm `r deg_pm`\left[deg \right]$ and $W = 270 \pm `r deg_pm`\left[deg \right]$.
+### Parametric estimate of the power curve
+The first idea was to split the majority of the observations into four categories; $N$, $E$, $S$ and $W$. The four categories will contain observations which fulfill following: $N=0 \pm `r deg_pm`\left[deg \right]=\left[ `r 360-deg_pm`,\;`r 0+deg_pm` \right]\left[deg \right]$. Same patterns follows for $E=90 \pm `r deg_pm`\left[deg \right]$, $S=180 \pm `r deg_pm`\left[deg \right]$ and $W=270 \pm `r deg_pm`\left[deg \right]$.
 
-There will be performed linear interpolationed for observations which are between the mentioned intervals.
+Then there will be performed linear interpolation for observations which are in-between the mentioned intervals.
 
-The power curve as function of the wind speed looks like a logistic growth model, figure \ref{fig_1_1}. Equation \ref{eq_1_1} shows the model which will be used to estimate the power production for a given wind directions. The observations will be subsetted for a given wind direction, fx. all observations which are within: $N = 0 \pm `r deg_pm`\left[deg \right]$ will be used to find the optimal parameter for $L$, $k$ and $ws_0$ w.r.t. the SSE given in eqn. \ref{eq_1_2}.
+The power curve as function of the wind speed looks like a logistic growth model, figure \ref{fig_1_1}. Equation \ref{eq_1_1} shows the model which will be used to estimate the power production for a given wind directions. The observations will be sub setted for a given wind direction, e.g. all observations which are within: $N=0 \pm `r deg_pm`\left[deg \right]$ will be used to find the optimal parameter for $L$, $k$ and $ws_0$ w.r.t. the SSE given in eqn. \ref{eq_1_2}.
 
 \begin{equation}
 \begin{aligned}
-pc_{par}\left( ws \right) = \frac{L}{1 + exp^{-k \cdot (ws - ws_0)}}
+pc_{par}\left( ws \right)=\frac{L}{1 + exp^{-k \cdot (ws - ws_0)}}
 \end{aligned}
 \label{eq_1_1}
 \end{equation}
@@ -177,7 +172,7 @@ pc_{par}\left( ws \right) = \frac{L}{1 + exp^{-k \cdot (ws - ws_0)}}
 
 \begin{equation}
 \begin{aligned}
-SSE = \sum_{i=1}^{n}\left( p_i -\hat { pc_{par,i} }  \right) ^2
+SSE=\sum_{i=1}^{n}\left( p_i -\hat { pc_{par,i} }  \right) ^2
 \end{aligned}
 \label{eq_1_2}
 \end{equation}
@@ -186,32 +181,33 @@ The implementations of eqn \ref{eq_1_1} and eqn \ref{eq_1_2} are given below.
 
 ```{r, echo=TRUE}
 # parametric power curve estimation
+# logistic growth model
 pc_par <- function(wind_speed, par) { 
-  # Logistic growth model
   return(par[1] / (1 + exp(-par[2] * (wind_speed - par[3]))))
 }
 # sum of squared residuals
 SSE <- function(model, par) { 
-  return(sum((model$p - pc_par(model$Ws1, par))^2, na.rm = TRUE)) 
+  return(sum((model$p - pc_par(model$Ws1, par))^2, na.rm=TRUE)) 
   }
 ```
 
-The same apporach as in Computer Exercise XX have been used to estimate the three parameters w.r.t. the SSE, eqn \ref{eq_1_2}. The optimizations are based upon following parameters: $L = `r round(initial_values[1],3)`$, $k = `r round(initial_values[2],3)`$ and $ws_0 = `r round(initial_values[3],3)`$.
+The optimization process is similar previous exercises where the estimate of the three parameters have been performed in order to minimize the SSE, eqn \ref{eq_1_2}. 
+The optimizations are based upon following initial parameters: $L=`r round(initial_values[1],3)`$, $k=`r round(initial_values[2],3)`$ and $ws_0=`r round(initial_values[3],3)`$.
 
 
 ```{r, fig.cap="\\label{fig_1_2}Plot of power as function of forecasted wind speed for the four categories of wind directions."}
-direction_list <- list("N" = list("low" = 360-deg_pm,
-                                  "mean" = 0,
-                                  "high" = deg_pm),
-                       "E" = list("low" = 90-deg_pm,
-                                  "mean" = 90,
-                                  "high" = 90+deg_pm),
-                       "S" = list("low" = 180-deg_pm,
-                                  "mean" = 180,
-                                  "high" = 180+deg_pm),
-                       "W" = list("low" = 270-deg_pm,
-                                  "mean" = 270,
-                                  "high" = 270+deg_pm))
+direction_list <- list("N"=list("low"=360-deg_pm,
+                                  "mean"=0,
+                                  "high"=deg_pm),
+                       "E"=list("low"=90-deg_pm,
+                                  "mean"=90,
+                                  "high"=90+deg_pm),
+                       "S"=list("low"=180-deg_pm,
+                                  "mean"=180,
+                                  "high"=180+deg_pm),
+                       "W"=list("low"=270-deg_pm,
+                                  "mean"=270,
+                                  "high"=270+deg_pm))
 
 # loop resolution
 for (ii in 1:length(direction_list)){
@@ -227,34 +223,34 @@ for (ii in 1:length(direction_list)){
   # number of obs in each
   direction_list[[ii]]$n <- sum(direction_list[[ii]]$idx)
   # fit model
-  direction_list[[ii]]$par <- optim(par = initial_values, fn = SSE, model = X[direction_list[[ii]]$idx,])$par
+  direction_list[[ii]]$par <- optim(par=initial_values, fn=SSE, model=X[direction_list[[ii]]$idx,])$par
 }
 
 # calculate power curve
 X$p_Wd1_N <- NA
-X$p_Wd1_N[direction_list[[1]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[1]]$idx], par = direction_list[[1]]$par)
-X$p_Wd1_N[direction_list[[2]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[2]]$idx], par = direction_list[[2]]$par)
-X$p_Wd1_N[direction_list[[3]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[3]]$idx], par = direction_list[[3]]$par)
-X$p_Wd1_N[direction_list[[4]]$idx] <- pc_par(wind_speed = X$Ws1[direction_list[[4]]$idx], par = direction_list[[4]]$par)
+X$p_Wd1_N[direction_list[[1]]$idx] <- pc_par(wind_speed=X$Ws1[direction_list[[1]]$idx], par=direction_list[[1]]$par)
+X$p_Wd1_N[direction_list[[2]]$idx] <- pc_par(wind_speed=X$Ws1[direction_list[[2]]$idx], par=direction_list[[2]]$par)
+X$p_Wd1_N[direction_list[[3]]$idx] <- pc_par(wind_speed=X$Ws1[direction_list[[3]]$idx], par=direction_list[[3]]$par)
+X$p_Wd1_N[direction_list[[4]]$idx] <- pc_par(wind_speed=X$Ws1[direction_list[[4]]$idx], par=direction_list[[4]]$par)
 
 # init plot 
 ggplot() + 
-  geom_point(data = X[direction_list[[1]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[1]), alpha = 1/4) +
-  geom_point(data = X[direction_list[[2]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[2]), alpha = 1/4) +
-  geom_point(data = X[direction_list[[3]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[3]), alpha = 1/4) +
-  geom_point(data = X[direction_list[[4]]$idx,], aes(x = Ws1, y = p, color = names(direction_list)[4]), alpha = 1/4) +
+  geom_point(data=X[direction_list[[1]]$idx,], aes(x=Ws1, y=p, color=names(direction_list)[1]), alpha=1/4) +
+  geom_point(data=X[direction_list[[2]]$idx,], aes(x=Ws1, y=p, color=names(direction_list)[2]), alpha=1/4) +
+  geom_point(data=X[direction_list[[3]]$idx,], aes(x=Ws1, y=p, color=names(direction_list)[3]), alpha=1/4) +
+  geom_point(data=X[direction_list[[4]]$idx,], aes(x=Ws1, y=p, color=names(direction_list)[4]), alpha=1/4) +
   
-  geom_line(data = X[direction_list[[1]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[1]), alpha = 1/1) +
-  geom_line(data = X[direction_list[[2]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[2]), alpha = 1/1) +
-  geom_line(data = X[direction_list[[3]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[3]), alpha = 1/1) +
-  geom_line(data = X[direction_list[[4]]$idx,], aes(x = Ws1, y = p_Wd1_N, color = names(direction_list)[4]), alpha = 1/1) +
-  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
-  labs(y = "p", x = "Ws1", color = "Wind direction") +
+  geom_line(data=X[direction_list[[1]]$idx,], aes(x=Ws1, y=p_Wd1_N, color=names(direction_list)[1]), alpha=1/1) +
+  geom_line(data=X[direction_list[[2]]$idx,], aes(x=Ws1, y=p_Wd1_N, color=names(direction_list)[2]), alpha=1/1) +
+  geom_line(data=X[direction_list[[3]]$idx,], aes(x=Ws1, y=p_Wd1_N, color=names(direction_list)[3]), alpha=1/1) +
+  geom_line(data=X[direction_list[[4]]$idx,], aes(x=Ws1, y=p_Wd1_N, color=names(direction_list)[4]), alpha=1/1) +
+  ylim(0,max(X$p,na.rm=TRUE)+max(X$p,na.rm=TRUE)*0.05)+
+  labs(y="p [kW]", x="Ws1 [m/s]", color="Wind direction") +
   theme_TS()
 ```
 
-Figure \ref{fig_1_2} shows the four power curves as function of the wind speed ($Ws1$) for the given wind direction interval. 
-The wind farm has a better power production, when the wind direction is either $S = 180 \pm `r deg_pm`\left[deg \right]$ or $N = 0 \pm `r deg_pm`\left[deg \right]$, according to figure \ref{fig_1_2}.
+Figure \ref{fig_1_2} shows the four power curves as function of the wind speed for the given wind direction interval. 
+The wind farm has a better power production, when the wind direction is either $S=180 \pm `r deg_pm`\left[deg \right]$ or $N=0 \pm `r deg_pm`\left[deg \right]$, according to figure \ref{fig_1_2}.
 
 The estimated parameters for Estimated values for $L$, $k$ and $ws_0$ are given in table \ref{tb_1_1} each wind interval.
 ```{r}
@@ -262,19 +258,19 @@ tmp <- t(data.frame(c(names(direction_list)[1],round(direction_list[[1]]$par,3))
                   c(names(direction_list)[2],round(direction_list[[2]]$par,3)),
                   c(names(direction_list)[3],round(direction_list[[3]]$par,3)),
                   c(names(direction_list)[4],round(direction_list[[4]]$par,3))))
-knitr::kable(tmp, format.args = kable_format,
-             row.names = FALSE, 
-             col.names = c(paste0("Wind direction, +-",deg_pm,"[deg]"),"L","k","ws0"),
-             caption = "\\label{tb_1_1}This table shows the estimated values for the parametric estimate of the power curve.")
+knitr::kable(tmp, format.args=kable_format,
+             row.names=FALSE, 
+             col.names=c(paste0("Wind direction, +-",deg_pm,"[deg]"),"L","k","ws0"),
+             caption="\\label{tb_1_1}This table shows the estimated values for the parametric estimate of the power curve.")
 
 ```
 
-
+\newpage
 ```{r}
 range01 <- function(x) { (x-min(x))/(max(x)-min(x)) }
 ret_p <- function(ws,wd,idx1,idx2) {
-  p_1 <- pc_par(wind_speed = ws, par = direction_list[[idx1]]$par)
-  p_2 <- pc_par(wind_speed = ws, par = direction_list[[idx2]]$par)
+  p_1 <- pc_par(wind_speed=ws, par=direction_list[[idx1]]$par)
+  p_2 <- pc_par(wind_speed=ws, par=direction_list[[idx2]]$par)
   ratio <- range01(c(direction_list[[idx1]]$high, wd, direction_list[[idx2]]$low))[2]
   return(p_1 *  ratio + (1-ratio) * p_2)
 }
@@ -286,7 +282,7 @@ pc_par_inter <- function(ws, wd) {
   }
   # E
   else if (direction_list[[2]]$low < wd & direction_list[[2]]$high <= wd) { 
-    power_re <- pc_par(wind_speed = ws, par = direction_list[[2]]$par)
+    power_re <- pc_par(wind_speed=ws, par=direction_list[[2]]$par)
   } 
   # SE
   else if (direction_list[[2]]$high < wd & direction_list[[3]]$low >= wd) { 
@@ -294,7 +290,7 @@ pc_par_inter <- function(ws, wd) {
   }
   # S
   else if (direction_list[[3]]$low < wd & direction_list[[3]]$high <= wd) { 
-    power_re <- pc_par(wind_speed = ws, par = direction_list[[3]]$par)
+    power_re <- pc_par(wind_speed=ws, par=direction_list[[3]]$par)
   }
   # SW
   else if (direction_list[[3]]$high < wd & direction_list[[4]]$low >= wd) { 
@@ -302,7 +298,7 @@ pc_par_inter <- function(ws, wd) {
   }
   # W
   else if (direction_list[[4]]$low < wd & direction_list[[4]]$high <= wd) { 
-    power_re <- pc_par(wind_speed = ws, par = direction_list[[4]]$par)
+    power_re <- pc_par(wind_speed=ws, par=direction_list[[4]]$par)
   }
   # NW
   else if (direction_list[[4]]$high < wd & direction_list[[1]]$low >= wd) { 
@@ -310,7 +306,7 @@ pc_par_inter <- function(ws, wd) {
   }
   # N
   else { 
-    power_re <- pc_par(wind_speed = ws, par = direction_list[[1]]$par)
+    power_re <- pc_par(wind_speed=ws, par=direction_list[[1]]$par)
   }
   #
   return(power_re)
@@ -322,8 +318,8 @@ Figure \ref{fig_1_4} shows the contour plot of the parametric model.
 ```{r, fig.cap="\\label{fig_1_4}Contour plot of power production as function of wind direction and speed by usin the parametric model."}
 # create grid
 grid_res <- 50
-x_seq <- seq(min(X$Ws1,na.rm = TRUE),max(X$Ws1,na.rm = TRUE), len = grid_res)
-y_seq <- seq(0,360, len = grid_res)
+x_seq <- seq(0, max(X$Ws1,na.rm=TRUE), len=grid_res)
+y_seq <- seq(0, 360, len=grid_res)
 con_melt <- expand.grid(x_seq, y_seq)
 # calculate function
 con_melt$value_par <- sapply(1:nrow(con_melt), function(i) { 
@@ -333,72 +329,72 @@ idx <- !is.na(con_melt$value_par)
 interp2xyz(interp(x=con_melt$Var1[idx], y=con_melt$Var2[idx], z=con_melt$value_par[idx], duplicate="mean"), data.frame=TRUE) %>%
   filter(!is.na(z)) %>%
   tbl_df() %>%
-  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  ggplot(aes(x=x, y=y, z=z, fill=z)) + 
   geom_tile() + 
-  geom_contour(color = "white", alpha = 0.5) + 
-  scale_fill_distiller(palette="Spectral", na.value="white") + 
+  geom_contour(color="white", alpha=0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white", name="Power [kW]") + 
   scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
-  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
+  labs(y="Wind direction [deg]", x="Wind speed [m/s]", color="") +
   theme_TS()
 
 tmp <- X %>% dplyr::arrange(desc(p)) %>% dplyr::select(p, Ws1, Wd1)
 tmp_top <- 10
 ```
-I do not think the representation in figure \ref{fig_1_4} shows well representation of the power curve as function of the wind speed and of the wind direction. The max recoded power production is $`r tmp[[1]][1]`$ with a wind speed of $`r tmp[[2]][1]` \left[ \frac{m}{s} \right]$ and with a wind direction of $`r tmp[[3]][1]` \left[ deg \right]$. Table \ref{tb_1_2} shows top `r tmp_top` observations which have the highest power production. From the table \ref{tb_1_2} below and from the intial contour plot in figure \ref{fig_1_1_1}, it is clear to see, that the parametric model does not make a well representation of the real power curve.
+I do not think the representation in figure \ref{fig_1_4} shows well representation of the power curve as function of the wind speed and of the wind direction. The highest recoded power production is $`r tmp[[1]][1]` [kW]$ with a wind speed of $`r tmp[[2]][1]` \left[ \frac{m}{s} \right]$ and with a wind direction of $`r tmp[[3]][1]` \left[ deg \right]$. 
+
+It is clear to see the parametric model does not make a well representation of the real power curve by comparing the contour plot in figure \ref{fig_1_4} with top `r tmp_top` observations, sorted after power production in table \ref{tb_1_2} and the initial contour plot in figure \ref{fig_1_1_1}.
 
 ```{r}
-knitr::kable(tmp[1:tmp_top,], format.args = kable_format,
-             row.names = FALSE, 
-             #col.names = c(paste0("Wind direction, +-",deg_pm,"[deg]"),"L","k","ws0"),
-             caption = "\\label{tb_1_2}This table shows the estimated values for the parametric estimate of the power curve.")
-sample_size = 0.1
+knitr::kable(tmp[1:tmp_top,], format.args=kable_format,
+             row.names=FALSE,
+             caption=paste0("\\label{tb_1_2}This table shows the top ", tmp_top," observations sorted after power production."))
+rm(tmp)
+sample_size <- 0.01
 splt_test <- 0.1
 k_fold <- 10
 ```
 
 
 \newpage
-#### Non-parametric estimate of the power curve
-A non-parametric approach has been caried out in order to create a better estimate of the multidimensionel power curve. I have chosen to use the kernel smoothing with the Epanechnikov kernel, as we did in Computer Exercise X.
+### Non-parametric estimate of the power curve
+A non-parametric approach has been carried out in order to create a better estimate of the multidimensional power curve. I have chosen to use the kernel smoothing with the Epanechnikov kernel, as we did in Computer Exercise 1.
 
-There are servel benefits by using a kernel estimate instead of the parametric estimate. The parametric approach has some limitation regarding the resolution of the wind direction. 
-<!--
-\begin{equation}
-\begin{aligned}
-pc_{nonpar}\left( ws, wd \right) = 
-\end{aligned}
-\label{eq_1_3}
-\end{equation}
--->
+There are several benefits by using a kernel estimate instead of the parametric estimate. E.g. the parametric approach has some limitation regarding the resolution of the wind direction. 
 
-The approach to estimate the multidimensinal power curve by using epanechnikov kernel are heavely inspired by Computer Exercise X. The implementation of the non-parametric model of the power curve is given below:
+The approach to estimate the multidimensional power curve by using epanechnikov kernel are heavily inspired by Computer Exercise 1. The implementation of the non-parametric model of the power curve is given below:
 ```{r, echo=TRUE}
 # the epanechnikov kernel
 kernelEp <- function(xall, x, h) {
   u <- abs(xall-x)
   u <- u / h
   w <- 3/4 * (1 - u^2)
-  ## Set values with |u|>1 to 0
+  # set values with |u|>1 to 0
   w[abs(u)>1] <- 0
   return(w)
 }
+```
+
+
+```{r, echo=TRUE}
 # non parametric model
-pc_nonpar <- function(wind_speed, wind_direction, bw) {
+pc_nonpar <- function(model, wind_speed, wind_direction, bw) {
+  # make sure colnames are correct
+  colnames(model) <- c("p","Wd","Ws")
   # Bandwidths in each two-dimensional multiplicative kernel relative to the range of x and y
-  hx <- bw * (max(X$Ws1, na.rm = TRUE) - min(X$Ws1, na.rm = TRUE))
-  hy <- bw * (max(X$Wd1, na.rm = TRUE) - min(X$Wd1, na.rm = TRUE))
+  hx <- bw * (max(model$Ws, na.rm=TRUE) - min(model$Ws, na.rm=TRUE))
+  hy <- bw * (max(model$Wd, na.rm=TRUE) - min(model$Wd, na.rm=TRUE))
   # Calculate the weights
-  wx <- kernelEp(xall = X$Ws1, x = wind_speed, h = hx)
-  wy <- kernelEp(xall = X$Wd1, x = wind_direction, h = hy)
+  wx <- kernelEp(xall=model$Ws, x=wind_speed, h=hx)
+  wy <- kernelEp(xall=model$Wd, x=wind_direction, h=hy)
   # Use multivariate weigths and only the positive
   w <- wx*wy
   ok <- w > 0
   # return NA if all weights are zero
-  if (sum(ok, na.rm = T) == 0) { return(NA) }
+  if (sum(ok, na.rm=T) == 0) { return(NA) }
   # Note that this is local first order polynomial regression
-  fit <- lm(p ~ Wd1 + Ws1, weights = w[ok], data = X[ok, c("p", "Ws1", "Wd1")])
+  fit <- lm(p ~ Wd + Ws, weights=w[ok], data=model[ok, c("p", "Ws", "Wd")])
   # predict
-  mean(predict(object = fit, data = data.frame("Ws1" = wind_speed, "Wd1" = wind_direction)))
+  mean(predict(object=fit, data=data.frame("Ws"=wind_speed, "Wd"=wind_direction)))
 }
 ```
 
@@ -406,162 +402,1419 @@ We want to optimize $bw$ w.r.t. the MSE1, eqn \ref{eq_1_4}\footnote{p. 45, Model
 
 \begin{equation}
 \begin{aligned}
-MSE1\left( h \right) = \frac{1}{n}\sum_{i=1}^{n}\left( p_i -\hat { pc_{nonpar,i} }  \right) ^2
+MSE1\left( h \right)=\frac{1}{n}\sum_{i=1}^{n}\left( p_i -\hat { pc_{nonpar,i} }  \right) ^2
 \end{aligned}
 \label{eq_1_4}
 \end{equation}
 
-I has chosen to randomly sample $`r sample_size*100`\%$ of complete cases of the total $`r nrow(X)`$ observations in order to increase computation time in the optimization process of $bw$. 
-It has been chosen to use `r k_fold`-fold cross-validation where the randomly sample observations have been splited into $`r (1-splt_test)*100`\%$ train data and $`r splt_test*100`\%$ test data.
+It has been chosen to randomly sample $`r sample_size*100`\%$ of complete cases of the total $`r nrow(X)`$ observations in order to increase computation time in the optimization process of $bw$. `r k_fold`-fold cross-validation have been used in order to validate the MSE1 of the randomly sampled observations. The observations have been divided into $`r (1-splt_test)*100`\%$ train data and $`r splt_test*100`\%$ validation data.
 
-The implementated of eqn. \ref{eq_1_4} is given below:
+The implementation of eqn. \ref{eq_1_4} is given below:
 ```{r, echo=TRUE}
 # MSE1 for selecting bandwidth
-MSE1_bw <- function(x, idx) {
+MSE1_bw <- function(x, idx, mod_in) {
   residuals <- sapply(idx, function(ii) { 
-    return((X$p[ii] - pc_nonpar(wind_speed = X$Ws1[ii],
-                               wind_direction = X$Wd1[ii], 
-                               bw = x))^2)
+    return((X$p[ii] - pc_nonpar(model=mod_in,
+                                wind_speed=mod_in$Ws[ii],
+                                wind_direction=mod_in$Wd[ii], 
+                                bw=x))^2)
     })
-  return(mean(residuals, na.rm = TRUE))
+  return(mean(residuals, na.rm=TRUE))
 }
 ```
 where `idx` are used to subset the data set.
 
-$bw$ has be to chosen between $[0;\;1]$. $bw$ scales the bandwidths ($hx$ and $hy$) in each two-dimensional multiplicative kernel relative to the range of $Ws1$ and to the range of $Wd1$.
-If $h*$ is large the variance is small but the bias is large and vice versa if $h*$ is small the variance is large but the bias is small. 
+$bw$ has be to chosen between $[0;\;1]$. It scales the bandwidths ($hx$ and $hy$) in each of the two-dimensional multiplicative kernel relative to the range of $Ws1$ and to the range of $Wd1$ respectively.
+
+If $h*$ is large the variance is small but the bias is large and vice versa.
 
 ```{r}
+# # find bw for "Wd1","Ws1"
+# model_in <- X[,c("p","Wd1","Ws1")]
+# colnames(model_in) <- c("p","Wd","Ws")
 # cv_bw <- function(sample_size) {
 #   #
-#   idx <- which(!is.na(X$Ws1) & !is.na(X$Wd1) & !is.na(X$p))
+#   idx <- which(!is.na(model_in$Ws) & !is.na(model_in$Wd) & !is.na(model_in$p))
 #   set.seed(22)
-#   idx <- sample(idx, size = as.integer(nrow(X) * sample_size), replace = FALSE)
-#   cv_fold <- caret::createDataPartition(y = idx, times = k_fold, p = (1-splt_test))
+#   idx <- sample(idx, size=as.integer(nrow(X) * sample_size), replace=FALSE)
+#   cv_fold <- caret::createDataPartition(y=idx, times=k_fold, p=(1-splt_test))
 #   # init list
 #   cv_list <- list()
 #   #
 #   for (ii in 1:length(cv_fold)) {
 #     print(paste0("Fold: cv_", ii))
-#     cv_list[[paste0("cv_", ii)]] = list()
+#     cv_list[[paste0("cv_", ii)]]=list()
 #     # create test and train
 #     idx_test <- idx[-cv_fold[[ii]]]
 #     idx_train <- idx[cv_fold[[ii]]]
 #     # this one should minimize the obj per default
-#     tmp_opt <- optimize(MSE1_bw, c(0,1), idx = idx_train, maximum = FALSE, tol = 0.00001)$minimum
+#     tmp_opt <- optimize(MSE1_bw, c(0,1), idx=idx_train, mod_in=model_in, maximum=FALSE, tol=0.00001)$minimum
 #     #
 #     cv_list[[paste0("cv_", ii)]]$idx_test <- idx[-cv_fold[[ii]]]
 #     cv_list[[paste0("cv_", ii)]]$idx_train <- idx[cv_fold[[ii]]]
 #     cv_list[[paste0("cv_", ii)]]$opt_bw <- tmp_opt
-#     cv_list[[paste0("cv_", ii)]]$opt_obj <- MSE1_bw(tmp_opt, idx_test)
+#     cv_list[[paste0("cv_", ii)]]$opt_obj <- MSE1_bw(tmp_opt, idx_test, model_in)
 #     #tmp_obj <- SSE_bw(tmp_opt, idx_test)
-#     print(paste(c(cv_list[[paste0("cv_", ii)]]$opt_bw, cv_list[[paste0("cv_", ii)]]$opt_obj), sep = ", "))
+#     print(paste(c(cv_list[[paste0("cv_", ii)]]$opt_bw, cv_list[[paste0("cv_", ii)]]$opt_obj), sep=", "))
 #   }
 #   # find lowest SSE
 #   return(cv_list)
 # }
 # #
 # cv_list <- cv_bw(sample_size)
-# save(cv_list, file = "~/DTU/Courses/Advanced Time Series/Projects/CE_4/cv_list.Rda")
+# save(cv_list, file="~/DTU/Courses/Advanced Time Series/Projects/CE_4/cv_list.Rda")
 load("~/DTU/Courses/Advanced Time Series/Projects/CE_4/cv_list.Rda")
 # get best fold
 tmp_bw <- NA
-tmp_obj <- 1000000
-fold <- NA
 for (ii in 1:length(cv_list)) {
-
-  opt_bw <- cv_list[[paste0("cv_", ii)]]$opt_bw
+  tmp_bw[ii] <- cv_list[[paste0("cv_", ii)]]$opt_bw
   opt_obj <- cv_list[[paste0("cv_", ii)]]$opt_obj
-
-  if (tmp_obj > opt_obj) {
-    tmp_bw <- opt_bw
-    tmp_obj <- opt_obj
-    fold <- ii
-  }
 }
-opt_bw <- tmp_bw
-# opt_bw <- 0.0145142985626031
+opt_bw <- mean(tmp_bw)
 ```
 
-The smallest MSE1 is $`r tmp_obj`$ in fold $`r fold`$ and has the optimal value of $bw = `r opt_bw`$.
+Due to the relative high range `r print(range(tmp_bw))` in the optimal values for each fold it has been decided to average value of the optimized $bw$. The average value is: $bw=`r opt_bw`$.
 
-Figure \ref{fig_1_5} shows the contour plot for the non-parametric model, using the optimal bandwidth scaling parameter $bw = `r opt_bw`$.
+Figure \ref{fig_1_5} shows the contour plot for the non-parametric model, using the average value: $bw=`r opt_bw`$.
 ```{r, fig.cap="\\label{fig_1_5}Contour plot of power production as function of wind direction and speed by usin the non-parametric model."}
 # calculate power
+con_melt$p <- NA
 con_melt$value_non_par <- sapply(1:nrow(con_melt), function(i) { 
-  return(pc_nonpar(wind_speed = con_melt$Var1[i], 
-                   wind_direction = con_melt$Var2[i], 
-                   bw = opt_bw)) 
+  return(pc_nonpar(model=X[,c("p","Wd1", "Ws1")],
+                   wind_speed=con_melt$Var1[i], 
+                   wind_direction=con_melt$Var2[i], 
+                   bw=opt_bw)) 
   })
 
 idx <- !is.na(con_melt$value_non_par)
 interp2xyz(interp(x=con_melt$Var1[idx], y=con_melt$Var2[idx], z=con_melt$value_non_par[idx], duplicate="mean"), data.frame=TRUE) %>%
   filter(!is.na(z)) %>%
   tbl_df() %>%
-  ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+  ggplot(aes(x=x, y=y, z=z, fill=z)) + 
   geom_tile() + 
-  geom_contour(color = "white", alpha = 0.5) + 
-  scale_fill_distiller(palette="Spectral", na.value="white") + 
+  geom_contour(color="white", alpha=0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white", name="Power [kW]") + 
   scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
-  labs(y = "Wind direction [deg]", x = "Wind speed [m/s]", color = "") +
+  labs(y="Wind direction [deg]", x="Wind speed [m/s]", color="") +
   theme_TS()
 ```
 
-Figure \ref{fig_1_5} shows a much better representation of the two-dimensional power curve compared to the parametric model in figure \ref{fig_1_4}. The contour plot in figure \ref{fig_1_5} is very similar to the initial contour plot, figure \ref{fig_1_1_1}, which was based upon the raw data. 
+Figure \ref{fig_1_5} shows a much better representation of the two-dimensional power curve compared to the parametric model in figure \ref{fig_1_4}. 
+The contour plot in figure \ref{fig_1_5} is very similar to the initial contour plot in figure \ref{fig_1_1_1}.
+
+
+\newpage
+# Model Design
+
+```{r, eval=FALSE}
+# # the normal ----
+# X$p_Wd1_N <- NULL
+# X$p_est_1 <- sapply(1:nrow(X), function(ii) {
+#   return(pc_nonpar(model=X[,c("p","Wd1", "Ws1")],
+#                    wind_speed=X$Ws1[ii],
+#                    wind_direction=X$Wd1[ii],
+#                    bw=opt_bw))
+#          })
+# X$p_est_2 <- sapply(1:nrow(X), function(ii) {
+#   return(pc_nonpar(model=X[,c("p","Wd2", "Ws2")],
+#                    wind_speed=X$Ws2[ii],
+#                    wind_direction=X$Wd2[ii],
+#                    bw=opt_bw))
+#          })
+# X$p_est_3 <- sapply(1:nrow(X), function(ii) {
+#   return(pc_nonpar(model=X[,c("p","Wd3", "Ws3")],
+#                    wind_speed=X$Ws3[ii],
+#                    wind_direction=X$Wd3[ii],
+#                    bw=opt_bw))
+#          })
+# # make sure estimates is not lower than zero.. ----
+# X$p_est_1[X$p_est_1 < 0] <- 0
+# X$p_est_2[X$p_est_2 < 0] <- 0
+# X$p_est_3[X$p_est_3 < 0] <- 0
+# save(X, file="~/DTU/Courses/Advanced Time Series/Projects/CE_4/X.Rda")
+```
+The data has been preprocessed and linear interpolation has been carried out where repetitive samples of `NA`s is no longer than 28 samples.
+
+The plot in figure \ref{fig_2_1} shows distribution plot of where the data contains `NA`s. It is not possible to get a complete season without missing values.
+
+```{r, fig.cap="\\label{fig_2_1}Placement of incomplete cases."}
+# clear old stuff
+rm(direction_list,cv_list,con_melt,deg_pm,grid_res,
+   idx,ii,initial_values,k_fold,opt_obj,sample_size,
+   splt_test,tmp_bw,tmp_top,x_seq,y_seq)
+load("~/DTU/Courses/Advanced Time Series/Projects/CE_4/X.Rda")
+idx <- !complete.cases(X)
+ggplot(X[idx, ]) +
+  geom_point(aes(x=t, y=1, color="NAs"), alpha=1) +
+  labs(y="NA", x="date time", color="Placement") +
+  theme_TS() +
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+# only complete cases
+X <- subset(X, subset=!idx)
+lambda_opt <- 1.00
+```
+
+There may be several other solutions to fill the missing observations, but I have chosen to exclude the indices which is not a complete case. 
+This may give abrupt jumps in the measured observations. 
+I think this can be solved by using a dynamic forgetting factor ($\lambda$). Although I start out with a static forgetting factor ($\lambda = `r lambda_opt`$) during the entire series.
+
+It have been chosen to truncate estimates of the power curve from the kernel to a lower limit of $0$.
+<!--
+Figure \ref{fig_2_2} illutrates the power production as function of time.
+
+```{r, fig.cap="\\label{fig_2_2}Plot power production as function of time."}
+ggplot() +
+  geom_point(data=X, aes(x=t, y=p, color="p"), alpha=1/4) + 
+  labs(y="p [kW]", x="date time", color="") +
+  theme_TS()
+```
+-->
+
+\newpage
+## Adaptive Recirsive Least Squares Regression
+
+The goal is to make 1,2 and 3 hours ahead power production predictions. Due to the way the data is presented on the 1,2 and 3 hour predictions can be predicted as one step a head prediction. 
+
+It has been chosen to start with the a simple model given in equation \ref{eq_2_1}.
+
+\begin{equation}
+\begin{aligned}
+Y_t= \alpha_t + X_{t-1}^T\theta_{t-1} + \epsilon_t
+\end{aligned}
+\label{eq_2_1}
+\end{equation}
+ <!--
+ or in state space form, equation \ref{eq_2_2}.
+\begin{equation}
+\begin{aligned}
+\begin{bmatrix} Y_{t,1H} \\ Y_{t,2H} \\ Y_{t,3H} \end{bmatrix} =\begin{bmatrix} 1& x_{t-1, 1H} & 0 &0  \\  1&0 & x_{t-1, 2H} &0\\  1&0  &0&x_{t-1, 3H}  \end{bmatrix}\begin{bmatrix} \beta_0 \\ \beta_1 \\ \beta_2 \\\beta_3 \end{matrix}
+\end{aligned}
+\label{eq_2_2}
+\end{equation}
+-->
+where $X_{t-1}$ is the estimated power production as a function of the wind speed and of the wind direction.
+The same model structure have been used to estimate the parameters for each of the three series, 1, 2 and 3 hour series.
+
+The parameters $\theta$ of the first simple model have been estimated using adaptive recursive least square (ARLS). 
+The two equations \ref{eq_2_arls_1} and \ref{eq_2_arls_2} are inspired by the slides from `Lecture No. 7 (Nov. 15th)`.
+
 \begin{itemize}
-\item TODO
+\item Update of parameters estimates:
+\begin{equation}
+\begin{aligned}
+\hat{\theta}_t = \hat{\theta}_{t-1} + R_t^{-1}X_t\left( Y_t-X_t^T\hat{\theta}_{t-1} \right) 
+\end{aligned}
+\label{eq_2_arls_1}
+\end{equation}
+\item Update of covariance matrix:
+\begin{equation}
+\begin{aligned}
+R_t = \lambda_{\left( t \right)}R_{t-1} + X_tX_t^T
+\end{aligned}
+\label{eq_2_arls_2}
+\end{equation}
+\item The forgetting factor $\lambda$ determines the number of effective observations ($T_0$) in the estimation of $\theta_t$:
+\begin{equation}
+T_0 = \frac{1}{1-\lambda_{\left( t \right)}}
+\label{eq_lambda}
+\end{equation}
+\end{itemize}
+where $\lambda_{\left( t \right)}$ is a static or dynamic,  forgetting factor $\left( 0 <\lambda_{\left( t \right)} \le 1\right)$.
+
+The following code chuck shows the implementation of the `ARLS`-function.
+
+```{r, echo=TRUE}
+ARLS <- function(x, Y=X$p, lambda=1, tau=NULL, PI=NULL) {
+  # create matrices 
+  R <- matrix(0, nrow=dim(x)[2], ncol=dim(x)[2])
+  Theta <- matrix(0, ncol=1, nrow=dim(x)[2])
+  theta_par <- matrix(NA, nrow=dim(x)[1], ncol=dim(x)[2])
+  estimate <- epsilon <- sd <-  rep(NA, dim(x)[1])
+  # apply filter
+  for (t in 1:dim(x)[1]) {
+    # make prediction for t | t-1 (for theta)
+    estimate[t] <- t(x[t, ]) %*% Theta
+    # prediction error
+    epsilon[t] <- Y[t] - estimate[t]
+    # estimate of confidence intervals
+    if (!is.null(PI)) { 
+      if (t > dim(x)[2]) {
+        sd2 <- epsilon[t]^2
+        sd[t] <- qt(PI, t - dim(x)[2]) * sqrt(sd2)
+      } else { sd[t] <- NA }
+    }
+    # update theta for t | t
+    R <- lambda * R + x[t, ] %*% t(x[t, ]) 
+    # Theta with or without quantile regression 
+    if (is.null(tau)) {
+      Theta <- Theta + R^-1 %*% x[t, ] %*% (Y[t] - t(x[t, ]) %*% Theta)
+    } else {
+      Theta <- Theta + R^-1 %*% x[t, ] %*% rho(tau=tau, r=(Y[t] - t(x[t, ]) %*% Theta))
+      }
+    # trace theta
+    theta_par[t, ] <- Theta
+  }
+  # return
+  return(list("es"=estimate,
+              "sd"=sd,
+              "theta"=as.data.frame(theta_par),
+              "epsilon"=epsilon))
+}
+```
+
+where `x` is the input matrix. Quantile regression will be applied if `tau` is different from `NULL`. `lambda` have been chosen to keep constant in the first estimates process.
+
+```{r}
+lambda_opt <- 1
+# 1 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=0.975)
+# predictions
+X$p_pred_1 <- tmp$es
+# residuals
+X$p_res_1 <- tmp$epsilon
+# sd
+X$p_sd_1 <- tmp$sd
+# theta
+X[,c("theta_1_alpha","theta_1_beta")] <- tmp$theta
+
+# 2 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt, PI=0.975)
+# predictions
+X$p_pred_2 <- tmp$es
+# residuals
+X$p_res_2 <- tmp$epsilon
+# sd
+X$p_sd_2 <- tmp$sd
+# theta
+X[,c("theta_2_alpha","theta_2_beta")] <- tmp$theta
+
+# 3 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt, PI=0.975)
+# predictions
+X$p_pred_3 <- tmp$es
+# residuals
+X$p_res_3 <- tmp$epsilon
+# sd
+X$p_sd_3 <- tmp$sd
+# theta
+X[,c("theta_3_alpha","theta_3_beta")] <- tmp$theta
+
+# consider dates ----
+start_per <- "2000-01-01 00:00:00 UTC"
+end_per <- "2000-01-10 00:00:00 UTC"
+per_n <- X %>% select(t) %>%
+  filter(t > start_per, t < end_per) %>% summarise(count = n())
+```
+
+It has been chosen to focus on a subset of the predictions in order to better interpretable visualizations. The selected period is from: `r start_per` to `r end_per` and consist of `r per_n` samples.
+
+\newpage
+
+### Plot of the predictions
+
+Figure \ref{fig_2_3} illustrates the 1 hour predictions of the estimated power with its respective $95\%$ confidence bands.
+
+```{r fig.cap="\\label{fig_2_3}Plot of the power and predicted power production as function of time."}
+X %>%
+  select(t,p,p_pred_1,p_sd_1) %>%
+  filter(t > start_per, t < end_per) %>%
+  mutate(p_ymax = p_pred_1+p_sd_1,
+         p_ymin = ifelse((p_pred_1-p_sd_1) < 0, 0,(p_pred_1-p_sd_1))) %>%
+  ggplot(aes(t)) + 
+  geom_ribbon(aes(ymin=p_ymin, ymax=p_ymax,fill = "CI 95%"), alpha=1/4) +
+  scale_fill_manual("Bands",values="grey12") +
+  geom_line(aes(y=p, color="p"), alpha=1/4) +
+  geom_line(aes(y=p_pred_1, color="p_pred_1H"), alpha=1/4) +
+  labs(y="p [kW]", x="time date", color=paste0("Lambda: ", round(lambda_opt,4))) +
+  theme_TS()
+```
+
+
+Figure \ref{fig_2_5} illustrates the 1, 2 and 3 hour predictions and the measured power production.
+```{r fig.cap="\\label{fig_2_5}Plot of the power and predicted power productions as function of time."}
+X %>%
+  select(t,p,p_pred_1,p_pred_2,p_pred_3) %>%
+  filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_line(aes(x=t, y=p_pred_1, color="p_pre_1H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p_pred_2, color="p_pre_2H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p_pred_3, color="p_pre_3H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p, color="p"), alpha=1/4) +
+  labs(y="power [kW]", x="date time", color=paste0("Lambda: ", round(lambda_opt,4))) +
+  theme_TS()
+
+```
+
+The 1, 2 and 3 hour predictions have more less same values in the selected period. All predicted series are positive shifted compared to the measured power production.
+
+
+\newpage
+
+### Analysis of the residuals
+
+The model have been fitted for each of the three series as you see in figure \ref{fig_2_5}. 
+To keep it simple, only the 1 hour prediction will be presented in the following analysis of the residuals.
+
+Figure \ref{fig_2_8} illustrates the residuals as function of time.
+```{r fig.cap="\\label{fig_2_8} Residuals as function of time.", message=FALSE, warning=FALSE}
+ggplot(X) +
+  geom_line(aes(x=t, y=p_res_1, color="res_1H"), alpha=1/3) +
+  labs(y="power [kW]", x="date time", color="residauls") +
+  theme_TS()
+
+```
+
+The plot in figure \ref{fig_2_8} shows a negative shift in the mean value ($`r round(mean(X$p_res_1),3)`$) of residuals. The negative shift is also supported in
+figure \ref{fig_2_9} which shows a the distribution of the residuals.
+```{r fig.cap="\\label{fig_2_9} A histogram of the residuals.", message=FALSE, warning=FALSE}
+ggplot(X) +
+  geom_histogram(aes(x=p_res_1, color="res_1H", y=..density..), alpha=1/2) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$p_res_1), sd=sd(X$p_res_1))) +
+  labs(x="epsilon", y="frequency (in %)", color="residauls") +
+  theme_TS()
+```
+
+
+A eloquent explanation for this would the constant forgetting factor $\lambda$ which is in the first model was set to $\lambda=1$. Then $\lambda=1$ the memory in the `ARLS` is $\infty$. See equation \ref{eq_lambda}.
+
+<!--
+Figure \ref{fig_2_10} and fig. \ref{fig_2_11} shows the ACF and PACF of the residuals respectively.
+```{r, fig.cap="\\label{fig_2_10}ACF of the residuals."}
+lags_acf <- data.frame(lag=acf(X$p_res_1, plot=F, lag.max=8*24)$lag,
+                       acf=acf(X$p_res_1, plot=F, lag.max=8*24)$acf,
+                       confi=qnorm((1 + 0.95)/2)/sqrt(length(X$p_res_1)), # from introduction to times series
+                       zero=0)
+
+lags_pacf <- data.frame(lag=pacf(X$p_res_1, plot=F, lag.max=8*24)$lag,
+                       acf=pacf(X$p_res_1, plot=F, lag.max=8*24)$acf,
+                       confi=qnorm((1 + 0.95)/2)/sqrt(length(X$p_res_1)), # from introduction to times series
+                       zero=0)
+
+#
+ggplot() +
+  geom_segment(data=lags_acf,
+               aes(x=lag, y=zero,
+                   xend=lag, yend=acf,
+                   colour="ACF"),
+               alpha=1/2) +
+  #
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=lags_acf$confi,
+                   yend=lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=-lags_acf$confi,
+                   yend=-lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks=seq(from=0, to=max(lags_acf$lag), by=10)) + 
+  labs(x="lag", y="value", color="") +
+  theme_TS()
+```
+
+```{r, fig.cap="\\label{fig_2_11}PACF of the residuals."}
+ggplot() +
+  geom_segment(data=lags_pacf,
+               aes(x=lag, y=zero,
+                   xend=lag, yend=acf,
+                   colour="PACF"),
+               alpha=1/2) +
+  #
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=lags_acf$confi,
+                   yend=lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=-lags_acf$confi,
+                   yend=-lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks=seq(from=0, to=max(lags_acf$lag), by=10)) + 
+  labs(x="lag", y="value", color="") +
+  theme_TS()
+```
+-->
+
+Figure \ref{fig_2_12} shows the cumulated periodogram of the residuals. 
+The cumulated periodogram illustrate that the residuals are depending of each other, which involves unexplored systematic behaviour in the residuals. 
+The residuals will be interpreted as white noise if they follow the diagonal in the plot.
+
+```{r, fig.cap="\\label{fig_2_12}Cumulated periodogram of the residuals."}
+# function ----
+cpgram_func <- function (ts, taper=0.1) {
+    if (NCOL(ts) > 1) { stop("only implemented for univariate time series") }
+    x <- as.vector(ts)
+    x <- x[!is.na(x)]
+    x <- spec.taper(scale(x, TRUE, FALSE), p=taper)
+    y <- Mod(fft(x))^2/length(x)
+    y[1L] <- 0
+    n <- length(x)
+    x <- (0:(n/2)) * frequency(ts)/n
+    if (length(x)%%2 == 0) {
+        n <- length(x) - 1
+        y <- y[1L:n]
+        x <- x[1L:n]
+    }
+    else y <- y[seq_along(x)]
+    xm <- frequency(ts)/2
+    mp <- length(x) - 1
+    crit <- 1.358/(sqrt(mp) + 0.12 + 0.11/sqrt(mp))
+    oldpty <- par(pty="s")
+    on.exit(par(oldpty))
+    return(list("df"=data.frame(x=x,y=cumsum(y)/sum(y)), 
+                "xlim"=c(0, xm), "ylim"=c(0, 1),
+                "confi_upper"=c(c(0, xm * (1 - crit)), c(crit, 1)),
+                "confi_lower"=c(c(xm * crit, xm), c(0, 1 - crit))
+                ))
+}
+
+
+# plot ----
+cpgram <- cpgram_func(X$p_res_1)
+ggplot() +
+  geom_point(data=cpgram$df, aes(x=x, y=y, color="cpgram"), alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_upper[1],
+                   y=cpgram$confi_upper[3],
+                   xend=cpgram$confi_upper[2],
+                   yend=cpgram$confi_upper[4], colour="95%CI"),
+               alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_lower[1],
+                   y=cpgram$confi_lower[3],
+                   xend=cpgram$confi_lower[2],
+                   yend=cpgram$confi_lower[4], colour="95%CI"),
+               alpha=1/2) +
+  labs(x="frequency", y="", color="") +
+  theme_TS()
+```
+
+
+\newpage
+### Tune the forgetting value
+Due to the dynamic of the system it does not make sense to update the parameters with respect all the previous observations. By decreasing the value of $\lambda$ it is possible to discard "old" memory, see equation \ref{eq_lambda}.
+
+```{r}
+# Loss function
+loss_func <- function(par, x_in, Y_in, tau_in=NULL) {
+  res_tmp <- ARLS(x=x_in, Y=Y_in, lambda = par,tau = tau_in, PI = NULL)$epsilon
+  return(sum(res_tmp^2))
+}
+# find lambda for each series
+lambda_opt <- NA
+lambda_opt[1] <- optimize(loss_func, lower=0, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p)$minimum
+lambda_opt[2] <- optimize(loss_func, lower=0, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p)$minimum
+lambda_opt[3] <- optimize(loss_func, lower=0, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p)$minimum
+
+T0 <- function(l) {return(1 / (1-l))}
+```
+
+It has been chosen to optimize the values of $\lambda$ of the 1, 2 and 3 hours series w.r.t. their SSE. 
+The optimized values of are: $\lambda = `r paste0(round(lambda_opt,4), collapse=", ")`$ for 1, 2 and 3 hour series respectively. 
+The used memory for each of the series will correspond to: $`r round(T0(lambda_opt[1]),0)`$, $`r round(T0(lambda_opt[2]),0)`$ and $`r round(T0(lambda_opt[3]),0)`$ samples respectively.
+
+```{r}
+sse_tmp_1 <- as.numeric(X %>%
+  select(t,p,p_pred_1) %>%
+  #filter(t > start_per, t < end_per) %>% 
+  summarise(sse = mean((p_pred_1 - p)^2)))
+
+# 1 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt[1], PI=0.975)
+# predictions
+X$p_pred_1 <- tmp$es
+# residuals
+X$p_res_1 <- tmp$epsilon
+# sd
+X$p_sd_1 <- tmp$sd
+# theta
+X[,c("theta_1_alpha","theta_1_beta")] <- tmp$theta
+
+sse_tmp_2 <- as.numeric(X %>%
+  select(t,p,p_pred_1) %>%
+  #filter(t > start_per, t < end_per) %>% 
+  summarise(sse = mean((p_pred_1 - p)^2)))
+
+# 2 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt[2], PI=0.975)
+# predictions
+X$p_pred_2 <- tmp$es
+# residuals
+X$p_res_2 <- tmp$epsilon
+# sd
+X$p_sd_2 <- tmp$sd
+# theta
+X[,c("theta_2_alpha","theta_2_beta")] <- tmp$theta
+
+# 3 hour ----
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt[3], PI=0.975)
+# predictions
+X$p_pred_3 <- tmp$es
+# residuals
+X$p_res_3 <- tmp$epsilon
+# sd
+X$p_sd_3 <- tmp$sd
+# theta
+X[,c("theta_3_alpha","theta_3_beta")] <- tmp$theta
+
+```
+
+The MSE has decreased from $`r round(sse_tmp_1,4)`$ to $`r round(sse_tmp_2,4)`$ after the optimization of $\lambda$-values.
+
+### Plot of the predictions
+
+Figure \ref{fig_2_32} illustrates the prediction for the 1 hour series and the measured power production. The visual interpretation of the plot does not looks very different to the similar plot in figure \ref{fig_2_3}.
+
+```{r fig.cap="\\label{fig_2_32}Plot of the power and predicted power production as function of time."}
+X %>%
+  select(t,p,p_pred_1,p_sd_1) %>%
+  filter(t > start_per, t < end_per) %>%
+  mutate(p_ymax = p_pred_1+p_sd_1,
+         p_ymin = ifelse((p_pred_1-p_sd_1) < 0, 0,(p_pred_1-p_sd_1))) %>%
+  ggplot(aes(t)) + 
+  geom_ribbon(aes(ymin=p_ymin, ymax=p_ymax,fill = "CI 95%"), alpha=1/4) +
+  scale_fill_manual("Bands",values="grey12") +
+  geom_line(aes(y=p, color="p"), alpha=1/4) +
+  geom_line(aes(y=p_pred_1, color="p_pred_1H"), alpha=1/4) +
+  labs(y="p [kW]", x="time date", color=paste0("Lambda: ", round(lambda_opt[1],4))) +
+  theme_TS()
+```
+
+\newpage 
+Figure \ref{fig_2_52} visualize the 1, 2 and 3 hour predictions and the measured power production.
+```{r fig.cap="\\label{fig_2_52}Plot of the power and predicted power productions as function of time."}
+X %>%
+  select(t,p,p_pred_1,p_pred_2,p_pred_3) %>%
+  filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_line(aes(x=t, y=p_pred_1, color="p_pre_1H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p_pred_2, color="p_pre_2H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p_pred_3, color="p_pre_3H"), alpha=1/4) +
+  geom_line(aes(x=t, y=p, color="p"), alpha=1/4) +
+  labs(y="power [kW]", x="date time", color=paste0("Lambda: \n", 
+                                                   "1H ", round(lambda_opt[1],4), "\n", 
+                                                   "2H ", round(lambda_opt[2],4), "\n", 
+                                                   "3H ", round(lambda_opt[3],4))) +
+  theme_TS()
+
+```
+
+The visual similarity between figure \ref{fig_2_5} and figure \ref{fig_2_52} is high despite using the optimized forgetting values in each series. The predictions are still positive biased.
+
+\newpage
+### Trace of the parameters
+One way to achieve insight from the system is by tracing the estimated parameters when applying `ARLS`. The following plots are only considering the 1 hour predictions.
+
+Figure \ref{fig_2_62} illustrates the estimated values of $\theta$ as a function of time. 
+```{r fig.cap="\\label{fig_2_62} Estimated values of $\\theta$ as function of time."}
+normalit <- function(m){ (m - min(m))/(max(m)-min(m)) }
+X %>%
+  select(t,p,theta_1_alpha, theta_1_beta) %>%
+  mutate(theta_1_alpha=normalit(theta_1_alpha),
+         theta_1_beta=normalit(theta_1_beta)) %>% 
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_line(aes(x=t, y=theta_1_alpha+1, color="alpha + 1"), alpha=1/3) +
+  geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="Value", x="date time", color="Normalized theta 1H") +
+  theme_TS()
+```
+
+Figure \ref{fig_2_72} shows histogram for each of the estimated values of $\theta$.
+
+```{r fig.cap="\\label{fig_2_72} Histograms of the estimated values of $\\theta$.", message=FALSE, warning=FALSE}
+X %>%
+  select(t,p,theta_1_alpha, theta_1_beta) %>%
+  #mutate(theta_1_alpha=normalit(theta_1_alpha),
+  #       theta_1_beta=normalit(theta_1_beta)) %>% 
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_histogram(aes(x=theta_1_alpha -10, y=..density.., colour="alpha-10"), alpha=1/4) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$theta_1_alpha -10), sd=sd(X$theta_1_alpha))) +
+  geom_histogram(aes(x=theta_1_beta, y=..density.., colour="beta"), alpha=1/4) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$theta_1_beta), sd=sd(X$theta_1_beta))) +
+  labs(y="frequency (in %)", x="theta values", color="Theta 1H") +
+  theme_TS()
+```
+
+The change of the slope parameter ($\beta$) does not change over time compared to the intercept ($\alpha$) of the model.
+
+
+### Analysis of the residuals
+
+Figure \ref{fig_2_82} illustrates the residual as function of time.
+```{r fig.cap="\\label{fig_2_82} Residuals as function of time.", message=FALSE, warning=FALSE}
+ggplot(X) +
+  geom_line(aes(x=t, y=p_res_1, color="res_1H"), alpha=1/3) +
+  labs(y="power [kW]", x="date time", color="Residauls") +
+  theme_TS()
+
+```
+
+The mean value of the residuals is `r round(mean(X$p_res_1),3)` which is a slightly improvement to the model using $\lambda=1$. 
+
+Figure \ref{fig_2_92} shows the distribution of the residuals.
+```{r fig.cap="\\label{fig_2_92} A histogram of the residuals.", message=FALSE, warning=FALSE}
+ggplot(X) +
+  geom_histogram(aes(x=p_res_1, y=..density.., color="res_1H"), alpha=1/2) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$p_res_1), sd=sd(X$p_res_1))) +
+  labs(x="epsilon", y="frequency (in %)", color="Residauls") +
+  theme_TS()
+```
+
+<!--
+Figure \ref{fig_2_102} and fig. \ref{fig_2_112} shows the ACF and PACF of the residuals respectively.
+```{r, fig.cap="\\label{fig_2_102}ACF of the residuals."}
+lags_acf <- data.frame(lag=acf(X$p_res_1, plot=F, lag.max=8*24)$lag,
+                       acf=acf(X$p_res_1, plot=F, lag.max=8*24)$acf,
+                       confi=qnorm((1 + 0.95)/2)/sqrt(length(X$p_res_1)), # from introduction to times series
+                       zero=0)
+
+lags_pacf <- data.frame(lag=pacf(X$p_res_1, plot=F, lag.max=8*24)$lag,
+                       acf=pacf(X$p_res_1, plot=F, lag.max=8*24)$acf,
+                       confi=qnorm((1 + 0.95)/2)/sqrt(length(X$p_res_1)), # from introduction to times series
+                       zero=0)
+
+#
+ggplot() +
+  geom_segment(data=lags_acf,
+               aes(x=lag, y=zero,
+                   xend=lag, yend=acf,
+                   colour="ACF"),
+               alpha=1/2) +
+  #
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=lags_acf$confi,
+                   yend=lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=-lags_acf$confi,
+                   yend=-lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks=seq(from=0, to=max(lags_acf$lag), by=10)) + 
+  labs(x="lag", y="value", color="") +
+  theme_TS()
+```
+
+```{r, fig.cap="\\label{fig_2_112}PACF of the residuals."}
+ggplot() +
+  geom_segment(data=lags_pacf,
+               aes(x=lag, y=zero,
+                   xend=lag, yend=acf,
+                   colour="PACF"),
+               alpha=1/2) +
+  #
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=lags_acf$confi,
+                   yend=lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  geom_segment(aes(x=min(lags_acf$lag),
+                   xend=max(lags_acf$lag),
+                   y=-lags_acf$confi,
+                   yend=-lags_acf$confi,
+                   colour="95%"),
+               linetype=2) +
+  ylim(-0.25,1) +
+  scale_x_continuous(breaks=seq(from=0, to=max(lags_acf$lag), by=10)) + 
+  labs(x="lag", y="value", color="") +
+  theme_TS()
+```
+-->
+
+Figure \ref{fig_2_122} illustrates the cumulated periodogram of the residuals. There is still unexplored systematic behaviour left in the residuals.
+```{r, fig.cap="\\label{fig_2_122}Cumulated periodogram of the residuals."}
+# plot ----
+cpgram <- cpgram_func(X$p_res_1)
+ggplot() +
+  geom_point(data=cpgram$df, aes(x=x, y=y, color="cpgram"), alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_upper[1],
+                   y=cpgram$confi_upper[3],
+                   xend=cpgram$confi_upper[2],
+                   yend=cpgram$confi_upper[4], colour="95%CI"),
+               alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_lower[1],
+                   y=cpgram$confi_lower[3],
+                   xend=cpgram$confi_lower[2],
+                   yend=cpgram$confi_lower[4], colour="95%CI"),
+               alpha=1/2) +
+  labs(x="frequency", y="", color="") +
+  theme_TS()
+```
+
+
+#### Summerazing op.. 
+
+\begin{itemize}
+\item values of $\lambda$
+\item huge jumps with missing values
+\item 
 \end{itemize}
 
 
-#### Comments on the Parametric Model and the Non-parametric Model
+\newpage
+## Adaptive Quantile Recirsive Least Squares Regression
+
+Quantile regression can be interpreted as a extension of linear regression. Quantile regression can be used when the conditions of linear regression are not appropriate. The motivation for quantile regression is the asymmetrical penalties which is needed for the non-linear periods in the power curve.
+
+Equation \ref{eq_2_arls_1} has been updated to equation \ref{eq_2_arls_1_1} in the `ARLS`-function in order to perform adaptive quantile recursive least squares (AQRLS) regression.
+
+\begin{equation}
+\begin{aligned}
+\hat{\theta}_t = \hat{\theta}_{t-1} + R_t^{-1}X_t\rho_{ \tau  }\left( Y_t-X_t^T\hat{\theta}_{t-1} \right) 
+\end{aligned}
+\label{eq_2_arls_1_1}
+\end{equation}
+where $\rho_{ \tau  }\left( \bullet \right)$ is a piecewise linear and asymmetric loss function used in quantile regression, see equation \ref{eq_qt_pen} and the implementation below. This is inspired by the slides from `Lecture No. 8 (Nov. 22nd)`.
+
+\begin{equation}
+\rho_{ \tau  }\left( r \right) = \begin{cases} \tau r & r\ge 0 \\ \left(1- \tau \right) r & r<0 \end{cases}
+\label{eq_qt_pen}
+\end{equation}
+
+```{r, echo=TRUE}
+rho <- function(tau, r) {
+  idx <- r < 0
+  r[idx] <- (1-tau) * r[idx]
+  r[!idx] <- tau * r[!idx]
+  return(r)
+}
+```
 
 
+It is now possible to estimate the parameters ($\theta$) for a given quantile $\tau$. 
+It has been chosen to estimate $\theta$ for the following quantiles: $\tau = \left\{  0.05, 0.25, 0.50, 0.75, 0.95\right\}$. 
 
-<!--
-Figure \ref{fig_1_6}
-```{r, fig.cap="\\label{fig_1_6}"}
-idx <- which(!is.na(X$Wd1) & !is.na(X$Ws1))
-X$p_Wd1_par <- NA
-X$p_Wd1_par[idx] <- sapply(idx, function(i) { 
-  return(pc_par_inter(ws = X$Ws1[i], wd = X$Wd1[i])) 
-  })
+The `ARLS`-function have been applied in order to estimate the parameters for each of the values of $\tau$. $\lambda=1$ has been chosen for the initial model estimate by AQRLS.
 
-X$p_Wd1_non_par <- NA
-X$p_Wd1_non_par[idx] <- sapply(idx, function(i) { 
-  return(pc_nonpar(wind_speed = X$Ws1[i], 
-                   wind_direction = X$Wd1[i], 
-                   bw = opt_bw)) 
-  })
+```{r}
+lambda_opt <- 1
+# 1 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_1_qt_05 <- tmp$es
+# residuals
+X$p_res_1_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_05","theta_1_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_1_qt_025 <- tmp$es
+# residuals
+X$p_res_1_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_025","theta_1_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_1_qt_075 <- tmp$es
+# residuals
+X$p_res_1_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_075","theta_1_beta_qt_075")] <- tmp$theta
+# 95
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=NULL, tau = 0.95)
+# predictions
+X$p_pred_1_qt_095 <- tmp$es
+# residuals
+X$p_res_1_qt_095 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_095","theta_1_beta_qt_095")] <- tmp$theta
+# 5
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt, PI=NULL, tau = 0.05)
+# predictions
+X$p_pred_1_qt_005 <- tmp$es
+# residuals
+X$p_res_1_qt_005 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_005","theta_1_beta_qt_005")] <- tmp$theta
 
-# # init plot 
-ggplot() + 
-  geom_line(data = X, aes(x = Ws1, y = p_Wd1_par, color = "Parametric"), alpha = 1/2) +
-  geom_line(data = X, aes(x = Ws1, y = p_Wd1_non_par, color = paste("Ep. kernel. bw=",round(opt_bw,3))), alpha = 1/2) +
-  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
-  labs(y = "p", x = "Ws1", color = "Wind direction") +
+
+# 2 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_2_qt_05 <- tmp$es
+# residuals
+X$p_res_2_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_05","theta_2_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_2_qt_025 <- tmp$es
+# residuals
+X$p_res_2_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_025","theta_2_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_2_qt_075 <- tmp$es
+# residuals
+X$p_res_2_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_075","theta_2_beta_qt_075")] <- tmp$theta
+
+# 3 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_3_qt_05 <- tmp$es
+# residuals
+X$p_res_3_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_05","theta_3_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_3_qt_025 <- tmp$es
+# residuals
+X$p_res_3_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_025","theta_3_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_3_qt_075 <- tmp$es
+# residuals
+X$p_res_3_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_075","theta_3_beta_qt_075")] <- tmp$theta
+```
+
+\newpage
+
+Figure \ref{fig_3_1} illustrates the same period of interest as in the ARLS regression. The QT bands for $\tau = 0.05$,  $\tau = 0.95$ and $\tau = 0.25$, $\tau = 0.75$ are plotted as shades in the figure. The QT where $\tau = 0.50$ has been plotted as a line to make it comparable with measured power production $p$. 
+
+```{r fig.cap="\\label{fig_3_1}AQRLS estimates of $\\theta$ for given values of $\\tau$."}
+X %>%
+  select(t,p,p_pred_1,p_pred_1_qt_05,p_pred_1_qt_025,p_pred_1_qt_075,p_pred_1_qt_005,p_pred_1_qt_095) %>%
+  filter(t > start_per, t < end_per) %>%
+  ggplot(aes(t)) + 
+  geom_ribbon(aes(ymin=(p_pred_1_qt_005), ymax=(p_pred_1_qt_095),fill = "5%-95% QT"), alpha=1) +
+  geom_ribbon(aes(ymin=(p_pred_1_qt_025), ymax=(p_pred_1_qt_075),fill = "25%-75% QT"), alpha=1) +
+  scale_fill_manual("Bands",values=c("#999999","#E69F00")) +
+  geom_line(aes(y=p, color="p"), alpha=1) +
+  geom_line(aes(y=p_pred_1_qt_05, color="50% QT"), alpha=1) +
+  labs(y="p [kW]", x="time date", color=paste0("Lambda: ", round(lambda_opt[1],4))) +
   theme_TS()
 ```
 
+
+### Analysis of the residuals
+Figure \ref{fig_3_2} illustrates the residuals as function of time for the 1 hour predictions.
+```{r fig.cap="\\label{fig_3_2} Residuals as function of time.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_line(aes(x=t, y=p_res_1, color="res_1H"), alpha=1/3) +
+  labs(y="power [kW]", x="date time", color="Residauls") +
+  theme_TS()
+```
+
+\newpage
+
+Figure \ref{fig_3_3} illustrates the distribution of the residuals. As earlier there are a negative shift in the residuals.
+```{r fig.cap="\\label{fig_3_3}Histogram of the residuals.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_histogram(aes(x=p_res_1, color="res_1H", y=..density..), alpha=1/2) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$p_res_1), sd=sd(X$p_res_1))) +
+  labs(x="epsilon", y="frequency (in %)", color="Residauls") +
+  theme_TS()
+```
+
+
+Figure \ref{fig_3_4} shows the cumulated periodogram of the residuals. The qq-plot is quiet similar to figure \ref{fig_2_12} where $\lambda=1$. There are still systematic behaviour left in the residuals.
+
+```{r, fig.cap="\\label{fig_3_4}Cumulated periodogram of the residuals."}
+tmp_p_res_1 <- X %>% 
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+  select(p_res_1)
+# plot ----
+cpgram <- cpgram_func(tmp_p_res_1)
+ggplot() +
+  geom_point(data=cpgram$df, aes(x=x, y=y, color="cpgram"), alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_upper[1],
+                   y=cpgram$confi_upper[3],
+                   xend=cpgram$confi_upper[2],
+                   yend=cpgram$confi_upper[4], colour="95%CI"),
+               alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_lower[1],
+                   y=cpgram$confi_lower[3],
+                   xend=cpgram$confi_lower[2],
+                   yend=cpgram$confi_lower[4], colour="95%CI"),
+               alpha=1/2) +
+  labs(x="frequency", y="", color="") +
+  theme_TS()
+```
+
+
+\newpage
+### Performance of quantiles
+
+It has been chosen to count the number of predictions which are within, below or above the considered quantiles. Hereby it is possible to compare the performance of the AQRLS model with $\lambda=1$ to the AQRLS model where $\lambda$ has been optimized w.r.t. a minimization of the 1 step ahead prediction SSE. 
+
+Table \ref{tab_3_performance} shows the percentage of the observations that are below, between and above the considered quantile intervals, the first four rows, next two rows and the last four rows respectively.
+
 ```{r}
-ggplot() + 
-  geom_line(data = X, aes(x = Ws1, y = (p_Wd1_non_par-p), color = paste("Ep. kernel. bw=",round(opt_bw,3))), alpha = 1/4) +
-  geom_line(data = X, aes(x = Ws1, y = (p_Wd1_par-p), color = "Parametric"), alpha = 1/4) +
-  ylim(0,max(X$p,na.rm = TRUE)+max(X$p,na.rm = TRUE)*0.05)+
-  labs(y = "p", x = "Ws1", color = "Wind direction") +
+n <- nrow(X)
+#
+below_95 <- sum(X$p < X$p_pred_1_qt_095) / n * 100
+below_75 <- sum(X$p < X$p_pred_1_qt_075) / n * 100
+below_25 <- sum(X$p < X$p_pred_1_qt_025) / n * 100
+below_05 <- sum(X$p < X$p_pred_1_qt_005) / n * 100
+#
+above_95 <- sum(X$p > X$p_pred_1_qt_095) / n * 100
+above_75 <- sum(X$p > X$p_pred_1_qt_075) / n * 100
+above_25 <- sum(X$p > X$p_pred_1_qt_025) / n * 100
+above_05 <- sum(X$p > X$p_pred_1_qt_005) / n * 100
+#
+betwe_0595 <- sum((X$p <= X$p_pred_1_qt_095) & (X$p >= X$p_pred_1_qt_005)) / n * 100
+betwe_2575 <- sum((X$p <= X$p_pred_1_qt_075) & (X$p >= X$p_pred_1_qt_025)) / n * 100
+
+df_performance <- data.frame(c("< 95","< 75","< 25","< 5",
+                               "5 > < 95","25 > < 75",
+                               "> 95","> 75","> 25","> 5"),
+                             rbind(below_95,below_75,below_25,below_05,
+                                   betwe_0595,betwe_2575,
+                                   above_95,above_75,above_25,above_05))
+colnames(df_performance) <- c("Quantile (in %)","AQRLS (in %)")
+knitr::kable(df_performance, 
+             caption = "\\label{tab_3_performance}Precentage of the observations that are below, between and above the considered quantile intervals.",
+             format.args = kable_format, 
+             row.names = FALSE)
+```
+
+### Fine tune values of lambda
+
+Table \ref{tab_3_qt_lambda} reports the optimized values of $\lambda$.
+```{r}
+# find lambda for each series
+lambda_opt <- list()
+lambda_opt$p_est_1 <- list()
+lambda_opt$p_est_2 <- list()
+lambda_opt$p_est_3 <- list()
+# 1 hour ----
+lambda_opt$p_est_1$qt05 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_1$qt25 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_1$qt50 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_1$qt75 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_1$qt95 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.95)$minimum
+# 2 hour ----
+lambda_opt$p_est_2$qt05 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_2$qt25 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_2$qt50 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_2$qt75 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_2$qt95 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.95)$minimum
+# 3 hour ----
+lambda_opt$p_est_3$qt05 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_3$qt25 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_3$qt50 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_3$qt75 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_3$qt95 <- optimize(loss_func, lower=0.6, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.95)$minimum
+```
+```{r}
+# table ----
+df_lambda <- data.frame(matrix(NA, nrow = 3, ncol = 6))
+df_lambda[1,] <- c("1H",
+                   lambda_opt$p_est_1$qt05,
+                   lambda_opt$p_est_1$qt25,
+                   lambda_opt$p_est_1$qt50,
+                   lambda_opt$p_est_1$qt75,
+                   lambda_opt$p_est_1$qt95)
+df_lambda[2,] <- c("2H",
+                   lambda_opt$p_est_2$qt05,
+                   lambda_opt$p_est_2$qt25,
+                   lambda_opt$p_est_2$qt50,
+                   lambda_opt$p_est_2$qt75,
+                   lambda_opt$p_est_2$qt95)
+df_lambda[3,] <- c("3H",
+                   lambda_opt$p_est_3$qt05,
+                   lambda_opt$p_est_3$qt25,
+                   lambda_opt$p_est_3$qt50,
+                   lambda_opt$p_est_3$qt75,
+                   lambda_opt$p_est_3$qt95)
+colnames(df_lambda) <- c("Quantile (in %)","5","25","50","75","95")
+knitr::kable(df_lambda, 
+             caption = "\\label{tab_3_qt_lambda}Optimized values of lambda for the given quantile, 1, 2 and 3 hour predictions.",
+             format.args = kable_format, 
+             row.names = FALSE)
+```
+
+
+
+Update the series...
+
+
+```{r}
+# 1 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_1_qt_05 <- tmp$es
+# residuals
+X$p_res_1_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_05","theta_1_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_1_qt_025 <- tmp$es
+# residuals
+X$p_res_1_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_025","theta_1_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_1_qt_075 <- tmp$es
+# residuals
+X$p_res_1_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_075","theta_1_beta_qt_075")] <- tmp$theta
+# 95
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt95, PI=NULL, tau = 0.95)
+# predictions
+X$p_pred_1_qt_095 <- tmp$es
+# residuals
+X$p_res_1_qt_095 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_095","theta_1_beta_qt_095")] <- tmp$theta
+# 5
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt05, PI=NULL, tau = 0.05)
+# predictions
+X$p_pred_1_qt_005 <- tmp$es
+# residuals
+X$p_res_1_qt_005 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_005","theta_1_beta_qt_005")] <- tmp$theta
+
+
+# 2 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_2_qt_05 <- tmp$es
+# residuals
+X$p_res_2_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_05","theta_2_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_2_qt_025 <- tmp$es
+# residuals
+X$p_res_2_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_025","theta_2_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_2_qt_075 <- tmp$es
+# residuals
+X$p_res_2_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_075","theta_2_beta_qt_075")] <- tmp$theta
+
+# 3 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_3_qt_05 <- tmp$es
+# residuals
+X$p_res_3_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_05","theta_3_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_3_qt_025 <- tmp$es
+# residuals
+X$p_res_3_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_025","theta_3_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_3_qt_075 <- tmp$es
+# residuals
+X$p_res_3_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_075","theta_3_beta_qt_075")] <- tmp$theta
+```
+
+
+
+```{r fig.cap="\\label{fig_3_5}"}
+X %>%
+  select(t,p,p_pred_1,p_pred_1_qt_05,p_pred_1_qt_025,p_pred_1_qt_075,p_pred_1_qt_005,p_pred_1_qt_095) %>%
+  filter(t > start_per, t < end_per) %>%
+  ggplot(aes(t)) + 
+  geom_ribbon(aes(ymin=(p_pred_1_qt_005), ymax=(p_pred_1_qt_095),fill = "QT 5%-95%"), alpha=1) +
+  geom_ribbon(aes(ymin=(p_pred_1_qt_025), ymax=(p_pred_1_qt_075),fill = "QT 25%-75%"), alpha=1) +
+  scale_fill_manual("Bands",values=c("#999999","#E69F00")) +
+  geom_line(aes(y=p, color="p"), alpha=1) +
+  geom_line(aes(y=p_pred_1_qt_05, color="QT 50%"), alpha=1) +
+  #geom_line(aes(y=p_pred_1, color="pred_1"), alpha=1) +
+  labs(y="p [kW]", x="time date", color="") +
+  theme_TS()
+```
+
+
+\newpage
+
+### Analysis of the residuals
+Figure \ref{fig_3_2_2} illustrates the residuals as function of time for the 1 hour predictions.
+```{r fig.cap="\\label{fig_3_2_2}Residuals as function of time.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_line(aes(x=t, y=p_res_1, color="res_1H"), alpha=1/3) +
+  labs(y="power [kW]", x="date time", color="Residauls") +
+  theme_TS()
+```
+
+\newpage
+
+Figure \ref{fig_3_3_2} illustrates the distribution of the residuals. As ealier there are a negative shift in the residuals.
+```{r fig.cap="\\label{fig_3_3_2}Histogram of the residuals.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_histogram(aes(x=p_res_1, color="res_1H", y=..density..), alpha=1/2) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$p_res_1), sd=sd(X$p_res_1))) +
+  labs(x="epsilon", y="frequency (in %)", color="Residauls") +
+  theme_TS()
+```
+
+
+Figure \ref{fig_3_4_2} shows the cumulated periodogram of the residuals. The qq-plot is quiet similar to figure \ref{fig_2_12} where $\lambda=1$. There are still systematic behavoiur left in the residuals.
+
+```{r, fig.cap="\\label{fig_3_4_2}Cumulated periodogram of the residuals."}
+tmp_p_res_1 <- X %>% 
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+  select(p_res_1)
+# plot ----
+cpgram <- cpgram_func(tmp_p_res_1)
+ggplot() +
+  geom_point(data=cpgram$df, aes(x=x, y=y, color="cpgram"), alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_upper[1],
+                   y=cpgram$confi_upper[3],
+                   xend=cpgram$confi_upper[2],
+                   yend=cpgram$confi_upper[4], colour="95%CI"),
+               alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_lower[1],
+                   y=cpgram$confi_lower[3],
+                   xend=cpgram$confi_lower[2],
+                   yend=cpgram$confi_lower[4], colour="95%CI"),
+               alpha=1/2) +
+  labs(x="frequency", y="", color="") +
+  theme_TS()
+```
+
+
+\newpage
+
+### Performance of quantiles with fine tuned values of lambda
+table \ref{tab_3_performance_2}
+```{r}
+#
+below_95 <- sum(X$p < X$p_pred_1_qt_095) / n * 100
+below_75 <- sum(X$p < X$p_pred_1_qt_075) / n * 100
+below_25 <- sum(X$p < X$p_pred_1_qt_025) / n * 100
+below_05 <- sum(X$p < X$p_pred_1_qt_005) / n * 100
+#
+above_95 <- sum(X$p > X$p_pred_1_qt_095) / n * 100
+above_75 <- sum(X$p > X$p_pred_1_qt_075) / n * 100
+above_25 <- sum(X$p > X$p_pred_1_qt_025) / n * 100
+above_05 <- sum(X$p > X$p_pred_1_qt_005) / n * 100
+#
+betwe_0595 <- sum((X$p <= X$p_pred_1_qt_095) & (X$p >= X$p_pred_1_qt_005)) / n * 100
+betwe_2575 <- sum((X$p <= X$p_pred_1_qt_075) & (X$p >= X$p_pred_1_qt_025)) / n * 100
+
+df_performance <- cbind(df_performance, 
+                        rbind(below_95,below_75,below_25,below_05,
+                              betwe_0595,betwe_2575,
+                              above_95,above_75,above_25,above_05))
+colnames(df_performance) <- c("Quantile (in %)","AQRLS (in %)","AQRLS FT (in %)")
+knitr::kable(df_performance, 
+             caption = "\\label{tab_3_performance_2}Precentage of the observations that are below, between and above the considered quantile intervals where lambda have been optimized.",
+             format.args = kable_format, 
+             row.names = FALSE)
+```
+
+
+
+
+
+### Trace of the parameters
+
+Parameter values as function of time.. Only for the wd1 ws1...
+
+Figure \ref{fig_3_3} illustrates the normlized values of $\theta$.
+```{r fig.cap="\\label{fig_3_3} Normalized values of $\theta$ as function of time."}
+X %>%
+  select(t,p,theta_1_alpha, theta_1_beta) %>%
+  mutate(theta_1_alpha=normalit(theta_1_alpha),
+         theta_1_beta=normalit(theta_1_beta)) %>% 
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_line(aes(x=t, y=theta_1_alpha, color="alpha"), alpha=1/3) +
+  geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="Value", x="date time", color="Normalized thetas") +
+  theme_TS()
+```
+
+Figure \ref{fig_3_4} illustrates histograms of the normlized values of $\theta$.
+```{r fig.cap="\\label{fig_3_4} Histograms of the normlized values of $\theta$.", message=FALSE, warning=FALSE}
+X %>%
+  select(t,p,theta_1_alpha, theta_1_beta) %>%
+  mutate(theta_1_alpha=normalit(theta_1_alpha),
+         theta_1_beta=normalit(theta_1_beta)) %>% 
+  filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_histogram(aes(x=theta_1_alpha, colour="alpha"), alpha=1/4) +
+  geom_histogram(aes(x=theta_1_beta, colour="beta"), alpha=1/4) +
+  #scale_y_continuous(labels = scales::percent) +
+  labs(y="frequency", x="theta value", color="theta parameters") +
+  theme_TS()
+```
+<!--
+## Describe the correlation in the residuals...
+figure \ref{fig_3_5}
+```{r, fig.cap="\\label{fig_3_5}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+tmp <- X$p_res_1_qt_05[1:100] %*% t(X$p_res_1_qt_05[1:100])
+tmp <- cor(tmp)
+tmp <- setNames(reshape2::melt(tmp), c('x', 'y', 'z'))
+interp2xyz(interp(x=tmp$x, y=tmp$y, z=tmp$z, duplicate="mean"), data.frame=TRUE) %>%
+  filter(!is.na(z)) %>%
+  tbl_df() %>%
+  ggplot(aes(x=x, y=y, z=z, fill=z)) + 
+  geom_tile() + 
+  geom_contour(color="white", alpha=0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white", name="Power [kW]") + 
+  #scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y="Wind direction [deg]", x="Wind speed [m/s]", color="") +
   theme_TS()
 ```
 -->
 
 
-\newpage
-## Lets Make Some Models
 
 
-\begin{equation}
-\begin{aligned}
-1
-\end{aligned}
-\label{eq_2_1}
-\end{equation}
 
 
+<!--
+## variable forgetting
+```{r, echo=TRUE}
+ARLS_VFF <- function(x, Y=X$p, tau=NULL, PI=NULL) {
+  # create matrices 
+  R <- XX <- matrix(0, nrow=dim(x)[2], ncol=dim(x)[2])
+  Theta <- matrix(0, ncol=1, nrow=dim(x)[2])
+  theta_par <- matrix(NA, nrow=dim(x)[1], ncol=dim(x)[2])
+  estimate <- epsilon <- lambda <- sd <-  rep(NA, dim(x)[1])
+  # apply filter
+  for (t in 1:dim(x)[1]) {
+    # update X
+    diag(XX) <- x[t, ]
+    # make prediction for t | t-1 (for theta)
+    estimate[t] <- diag(XX) %*% Theta
+    # prediction error
+    epsilon[t] <- Y[t] - estimate[t]
+    # estimate of confidence intervals
+    if (!is.null(PI)) { 
+      if (t > dim(x)[2]) {
+        sd2 <- epsilon[t]^2
+        sd[t] <- qt(PI, t - dim(x)[2]) * sqrt(sd2)
+      } else { sd[t] <- NA }
+    }
+    # update lambda
+    if (t != 1) {
+      lambda[t] <- epsilon[t]^2 / (diag((1 + t(XX) %*% solve(R) %*% XX)) %*% Theta)
+    } else {
+      lambda[t] <- 1 
+    }
+    # update theta for t | t
+    R <- XX %*% t(XX) + lambda[t] * R
+    # Theta with or without quantile regression 
+    if (is.null(tau)) { 
+      Theta <- Theta + solve(R) %*% XX %*% (Y[t] - t(XX) %*% Theta) 
+    } else { 
+      Theta <- Theta + solve(R) %*% XX %*% rho(tau=tau, r=(Y[t] - t(XX) %*% Theta))
+      }
+    # trace theta
+    theta_par[t, ] <- Theta
+  }
+  # return
+  return(list("es"=estimate,
+              "sd"=sd,
+              "theta"=as.data.frame(theta_par),
+              "epsilon"=epsilon,
+              "lambda"=lambda))
+}
+```
+
+```{r}
+
+#ARLS_VFF(x = cbind(1, X$p_est_1))
+
+
+
+```
+
+## Describe the correlation in the residuals...
+figure \ref{fig_3_6}
+```{r, fig.cap="\\label{fig_3_6}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+X %>%
+  select(t,p,p_res_1, T1) %>%
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_point(aes(x=T1, y=p, color="p"), alpha=1/3) +
+  #geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="p [kW]", x="temperature [K]", color="") +
+  theme_TS()
+
+cor(X$T1, X$p)
+```
+
+
+figure \ref{fig_3_7}
+```{r, fig.cap="\\label{fig_3_7}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+X %>%
+  select(t,p, T1) %>%
+  mutate(t_hour = as.integer(substr(t, 12, 13))) %>%
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_point(aes(x=t_hour, y=p, color="alpha"), alpha=1/3) +
+  #geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="Value", x="date time", color="Normalized thetas") +
+  theme_TS()
+
+cor(X$toy, X$p)
+```
+
+
+-->

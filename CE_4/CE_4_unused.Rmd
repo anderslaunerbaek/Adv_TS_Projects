@@ -1,0 +1,460 @@
+---
+title: 'Advanced Time Series Analysis: Computer Exercise 4'
+author: "Anders Launer Bæk (s160159)"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+header-includes: 
+    - \usepackage{graphicx}
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+
+knitr::opts_chunk$set(echo = FALSE, 
+                      include = TRUE,
+                      warning = FALSE,
+                      fig.width = 8, fig.height = 4,
+                      fig.show='hold', fig.align='center',
+                      
+                      eval = TRUE, 
+                      tidy = TRUE, 
+                      dev = 'pdf', 
+                      cache = TRUE, fig.pos = "th!")
+
+kable_format <- list(small.mark = ",",
+                     big.mark = ',',
+                     decimal.mark = '.',
+                     nsmall = 3,
+                     digits = 3,
+                     scientific = FALSE,
+                     big.interval = 3L)
+
+library(ggplot2)
+library(akima)
+library(dplyr)
+theme_TS <- function(base_size = 9, base_family = "", face = "plain"){
+  theme_bw(base_size = base_size, base_family = base_family) %+replace%
+    theme(panel.background = element_blank(), 
+          panel.border = element_blank(),
+          panel.grid = element_blank(),
+          axis.text = element_text(size = base_size, face = face, family = base_family),
+          axis.title = element_text(size = base_size, face = face, family = base_family),
+          legend.text = element_text(size = base_size, face = face, family = base_family))
+}
+
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+
+```
+
+$f\left( x \right)=\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3+\sum_{k=1}^Kb_k\left( x -\xi_k \right)^3 $
+$K = 3$
+
+
+$\sum_{i=1}^n\left\{ y_i - f\left( x_i \right)  \right\} ^2+\lambda  \int\left\{ f^{''}\left( x \right)  \right\} ^2 dx$
+
+$f^{''}\left( x \right) = 2 \beta_2 + 6 \beta_3 x + 6 b_1 (x-\xi_1) + 6 b_2(x-\xi_2) + 6 b_3 (x-\xi_3)$
+
+$\int  \left\{ f^{ '' }\left( x \right)  \right\} ^{ 2 }dx=\frac { 4\left( \beta _{ 2 }+3\left( -\left( b_2\xi _{ 2 } \right) -b_3\xi _{ 3 }+\beta _{ 3 }x+b_2x+b_3x+b_1\left( -\xi _{ 1 }+x \right)  \right)  \right) ^{ 3 } }{ 9\left( \beta _{ 3 }+b_1+b_2+b_3 \right)  } $
+
+`r lambda`
+
+```{r}
+
+lambda <- 10
+win_size <- 40
+K <- 3 # knots
+features <- 3 + 1 # cubic spine
+
+
+D <- matrix(0, nrow = K + features, ncol = K + features)
+diag(D)[(features+1):(K + features)] <- 1
+
+f_spline <- function(x_vec, K) {
+  win_size <- length(x_vec)
+  #K_knots <- seq(min(x_vec), max(x_vec),length=K)
+  C <- matrix(NA, nrow = win_size, ncol = K + features)
+  # insert 
+  C[, 1] <- 1
+  C[, 2] <- x_vec
+  C[, 3] <- x_vec^2
+  C[, 4] <- x_vec^3
+  for (ii in 1:K) {
+    C[, ii+4] <- (x_vec - K_knots[ii])^3
+  }
+  # C[, 5] <- (x_vec - K_knots[1])^3
+  # C[, 6] <- (x_vec - K_knots[2])^3
+  # C[, 7] <- (x_vec - K_knots[3])^3
+  #
+  return(C)
+}
+
+# with a peicewise linear and asymmetric loss function
+rho <- function(tau, r) {
+  if (r >= 0) { return(tau * r) }
+  else { return((1-tau) * r) }
+}
+
+
+
+loss <- function(par, model, tau) {
+  # calculate residuals
+  res <- model[["p"]] - rowSums(f_spline(x_vec = model[["p_est"]], K=K) %*% par)
+  # peicewise linear and asymmetric loss function
+  res <- sapply(1:length(res), function(ii) {
+    rho(tau=tau, r = res[ii])
+    })
+  # calculate SE 
+  SE <- res^2 
+  # add penalty 
+  PEN <- lambda * t(par) %*% D %*% par
+  return(sum(SE + PEN))
+}
+
+#
+
+X$p_est_25 <- NA
+X$p_est_50 <- NA
+X$p_est_75 <- NA
+X$residual_1h <- NA
+X$residual_2h <- NA
+X$residual_3h <- NA
+
+#
+X_cap <- data.frame(matrix(NA, ncol = (K + features) * 3, nrow = nrow(X)))
+
+
+colnames(X_cap) <- c(paste0("25_", c("beta0","beta1","beta2","beta3","b1","b2","b3")),
+                     paste0("50_", c("beta0","beta1","beta2","beta3","b1","b2","b3")),
+                     paste0("75_", c("beta0","beta1","beta2","beta3","b1","b2","b3")))
+
+         
+pre_quantile_plot <- function(model, qt = c(25,50,75)) {
+  return(ggplot(model) +
+  geom_point(aes(x=t,y=p, color = "Observation"), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_25, color = paste0(qt[1]," pct. quantile")), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_50, color = paste0(qt[2]," pct. quantile")), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_75, color = paste0(qt[3]," pct. quantile")), alpha = 1/2) +
+  labs(y = "power [kW]", x = "date time", color = "") +
+  theme_TS())
+  }
+
+
+par25 <- par50 <- par75 <- c(-0.086046514,-0.4869695,0.6381740,-0.2518905,
+                             0.2404314,0.005618799,-0.0010847470)  # 
+# par25 <- par50 <- par75 <- rnorm(K + features)
+
+for (ii in 1:(nrow(X)-win_size)) {
+  # extract window
+  idx_win <- 1:nrow(X) %in% ii:(ii + win_size - 1)
+  X_tmp <- subset(X, select = c("p","p_est"), subset = idx_win)
+  #
+  par25 <- optim(par = par25, fn = loss, model = X_tmp, tau = 0.25)$par
+  par50 <- optim(par = par50, fn = loss, model = X_tmp, tau = 0.5)$par
+  par75 <- optim(par = par75, fn = loss, model = X_tmp, tau = 0.75)$par
+  #
+  X_cap[ii, 1:length(par25)] <- par25
+  X_cap[ii, (1+length(par50)):(2*length(par50))] <- par50
+  X_cap[ii, (1+2*length(par75)):(3*length(par75))] <- par75
+
+  X[["p_est_25"]][idx_win] <- rowSums(f_spline(x_vec = X_tmp[["p_est"]], K=K) %*% par25)
+  X[["p_est_50"]][idx_win] <- rowSums(f_spline(x_vec = X_tmp[["p_est"]], K=K) %*% par50)
+  X[["p_est_75"]][idx_win] <- rowSums(f_spline(x_vec = X_tmp[["p_est"]], K=K) %*% par75)
+  
+  if (ii == 50) { break }
+}
+
+idx <- !is.na(X$p) & !is.na(X$p_est_25) & !is.na(X$p_est_50) & !is.na(X$p_est_75)
+pre_quantile_plot(X[idx, ])
+
+X$residual_1h <- X[["p"]] - X[["p_est_50"]]
+# X_cap[2:10,8:14]
+
+qqnorm(X$residual_1h)
+qqline(X$residual_1h)
+
+```
+
+
+Adaptive RLS
+```{r}
+X_1 <- subset(X, select = c("t", "p", "p_est", "T1"))
+X_1$p_est[X_1$p_est < 0] <- 0
+
+# # Spline 
+# matrix(NA, nrow = win_size, ncol = K + features)
+#   # insert
+#   C[, 1] <- 1
+#   C[, 2] <- x_vec
+#   C[, 3] <- x_vec^2
+#   C[, 4] <- x_vec^3
+#   for (ii in 1:K) {
+#     C[, ii+4] <- (x_vec - K_knots[ii])^3
+#   }
+# 
+# K <- 3
+# 
+# matrix(c(1, X_1$p_est,X_1$p_est^2,4,5,6,7), nrow = win_size, ncol = K + features, byrow = T)
+
+# with a peicewise linear and asymmetric loss function
+
+
+
+spline_func <- function(x, K=3, x_l, x_u) {
+  #return(matrix(c(1, x, x^2, x^3, (x-seq(x_l, x_u, length = K))^3), ncol=4+K))
+  return(sum(c(1, x, x^2, x^3, (x-seq(x_l, x_u, length = K))^3)))
+} 
+
+ARLS <- function(x = cbind(X_1$p_est, X_1$p_est^2), Y = X_1$p, lambda = cbind(X_1$lambda, X_1$lambda), tau = 0.25) {
+  # initial 
+  P <- matrix(NA, ncol = dim(x)[2], nrow = dim(x)[1])
+  K <- matrix(NA, ncol = dim(x)[2], nrow = dim(x)[1])
+  Theta <- matrix(NA, ncol = dim(x)[2], nrow = dim(x)[1])
+  P[1, ] <- x[1,]
+  Theta[1, ] <- 1
+  K[1, ] <- 1
+
+  # apply filter
+  for (t in 2:dim(x)[1]) {
+    # K
+    K[t, ] <- (P[t-1, ] * x[t,]) / (lambda[t, ] + t(x[t,]) * P[t-1,] * x[t,])
+    # Theta
+    Theta[t, ] <- Theta[t-1,] + K[t,] * (Y[t] - t(x[t,]) * Theta[t-1,])
+    # qunatile regression
+    #Theta[t] <- Theta[t-1] + K[t] * rho(tau = tau, (Y[t] - t(x[t]) %*% Theta[t-1]))
+    # P
+    P[t,] <- 1/lambda[t,] * (P[t-1,] - ((P[t-1,] * x[t,] * t(x[t,]) * P[t-1,]) / (lambda[t,] + t(x[t,]) * P[t-1,] * x[t,])))
+    if (tt == 100) { break }
+  }
+  # return
+  return(P)
+}
+
+
+ARLS(x = X_1$p_est, Y = X_1$p, lambda = X_1$lambda, tau = 0.5)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### quantile regression
+does not performace
+```{r}
+
+tau_in <- 0.25
+#lambda_opt <- optimize(loss, c(0,1), Y = X_1$p, X = cbind(1, X_1$p_est), TAU = tau_in)$minimum
+X_1$pred_025 <- ARLS(x = cbind(1, X_1$p_est), lambda = lambda_opt, tau = tau_in)
+
+tau_in <- 0.5
+#lambda_opt <- optimize(loss, c(0,1), Y = X_1$p, X = cbind(1, X_1$p_est), TAU = tau_in)$minimum
+X_1$pred_050 <- ARLS(x = cbind(1, X_1$p_est), lambda = lambda_opt, tau = tau_in)
+
+tau_in <- 0.75
+#lambda_opt <- optimize(loss, c(0,1), Y = X_1$p, X = cbind(1, X_1$p_est), TAU = tau_in)$minimum
+X_1$pred_075 <- ARLS(x = cbind(1, X_1$p_est), lambda = lambda_opt, tau = tau_in)
+
+
+ggplot(X_1[1:600,]) +
+  geom_line(aes(x = t, y = p, color = "p"), alpha = 1/2) +
+  geom_line(aes(x = t, y = pred_050, color = "qt50"), alpha = 1/3) +
+  geom_line(aes(x = t, y = pred_025, color = "qt25"), alpha = 1/4) +
+  geom_line(aes(x = t, y = pred_075, color = "qt75"), alpha = 1/4) +
+  labs(y = "power [kW]", x = "date time", color = paste0("Lambda: ", round(lambda_opt,4))) +
+  theme_TS()
+X_1$res_025 <- X_1$p - X_1$pred_025
+X_1$res_050 <- X_1$p - X_1$pred_050
+X_1$res_075 <- X_1$p - X_1$pred_075
+
+```
+dasd
+```{r}
+qqnorm(X_1$res_050)
+qqline(X_1$res_050)
+
+```
+
+
+
+
+
+
+
+variable forgetting factor
+
+
+
+
+
+
+
+
+
+```{r}
+normalit<-function(m){
+   (m - min(m))/(max(m)-min(m))
+}
+
+
+X_cap %>% na.omit() %>% 
+    mutate_all(funs(normalit)) %>% 
+  ggplot() +
+  geom_point()
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+It is important to model the interdependence structure of the prediction errors.
+```{r}
+
+
+
+pre_quantile_plot <- function(date_start, date_end, qt = c(25,50,75)) {
+  return(X %>% dplyr::filter(t > date_start & t < date_end) %>%
+  ggplot() +
+  geom_point(aes(x=t,y=p, color = "Observation"), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_25, color = paste0(qt[1],", ",qt[2]," and ", qt[3]," pct. quantile")), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_50, color = paste0(qt[1],", ",qt[2]," and ", qt[3]," pct. quantile")), alpha = 1/2) +
+  geom_line(aes(x=t,y=p_est_75, color = paste0(qt[1],", ",qt[2]," and ", qt[3]," pct. quantile")), alpha = 1/2) +
+  labs(y = "power [kW]", x = "date time", color = "") +
+  theme_TS())
+  }
+# select range
+pre_quantile_plot(date_start = NULL,
+                  date_end = NULL)
+
+```
+
+
+
+Correlation structure of forecast errors
+interdependence structure
+```{r}
+n <- 10
+mat <- matrix(runif(n*n,-1,1), nrow = n, ncol = n)
+
+plot_res_correlation <- function(matrix, label_name="Correlation structure", axis_name="Residuals"){
+  # rshape
+  matrix <- reshape2::melt(matrix)
+  # return plot
+  return(interp2xyz(interp(x=matrix$Var1, y=matrix$Var2, z=matrix$value, duplicate="mean"), data.frame=TRUE) %>%
+           ggplot(aes(x = x, y = y, z = z, fill = z)) + 
+           geom_tile() + 
+           scale_fill_distiller(palette="Spectral", na.value="white", name=label_name) +
+           labs(y = axis_name, x = axis_name, color = "") +
+           theme_TS())
+}
+
+
+plot_res_correlation(mat)
+
+
+```
+
+The forecasting models must be adaptive (in order to taken changes of dust on blades, changes roughness, etc., into account).
+Reliable estimates of the forecast accuracy is very important (check the reliability by eg. reliability diagrams).
+Reliable probabilistic forecasts are important to gain the full economical value.
+Use more than a single MET provider for delivering the input to the prediction tool
+– this improves the accuracy of wind power forecasts with 10-15 pct. Estimates of the correlation in forecasts errors important.
+Forecasts of ’cross dependencies’ between load, prices, wind and solar power are important.
+Probabilistic forecasts are very important for asymmetric cost functions.
+
+
+
+
+
+Now with variable forgeeting factor
+
+### 
+
+### Uncertainty Estimation
+```{r}
+smooth.spline
+```
+
+
+
+Maybe include temperature..
+
