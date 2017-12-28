@@ -458,3 +458,386 @@ smooth.spline
 
 Maybe include temperature..
 
+
+
+### Fine tune values of lambda
+
+Table \ref{tab_3_qt_lambda} reports the optimized values of $\lambda$.
+```{r}
+# find lambda for each series
+lambda_opt <- list()
+lambda_opt$p_est_1 <- list()
+lambda_opt$p_est_2 <- list()
+lambda_opt$p_est_3 <- list()
+# 1 hour ----
+lambda_opt$p_est_1$qt05 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_1$qt25 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_1$qt50 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_1$qt75 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_1$qt95 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_1), Y_in=X$p, tau_in=0.95)$minimum
+# 2 hour ----
+lambda_opt$p_est_2$qt05 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_2$qt25 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_2$qt50 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_2$qt75 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_2$qt95 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_2), Y_in=X$p, tau_in=0.95)$minimum
+# 3 hour ----
+lambda_opt$p_est_3$qt05 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.05)$minimum
+lambda_opt$p_est_3$qt25 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.25)$minimum
+lambda_opt$p_est_3$qt50 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.5)$minimum
+lambda_opt$p_est_3$qt75 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.75)$minimum
+lambda_opt$p_est_3$qt95 <- optimize(loss_func, lower=0.85, upper=1, x_in=cbind(1, X$p_est_3), Y_in=X$p, tau_in=0.95)$minimum
+```
+
+
+
+```{r}
+# table ----
+df_lambda <- data.frame(matrix(NA, nrow = 3, ncol = 6))
+df_lambda[1,] <- cbind("1H",
+                   round(lambda_opt$p_est_1$qt05, 4),
+                   round(lambda_opt$p_est_1$qt25, 4),
+                   round(lambda_opt$p_est_1$qt50, 4),
+                   round(lambda_opt$p_est_1$qt75, 4),
+                   round(lambda_opt$p_est_1$qt95, 4))
+df_lambda[2,] <- cbind("2H",
+                   round(lambda_opt$p_est_2$qt05, 4),
+                   round(lambda_opt$p_est_2$qt25, 4),
+                   round(lambda_opt$p_est_2$qt50, 4),
+                   round(lambda_opt$p_est_2$qt75, 4),
+                   round(lambda_opt$p_est_2$qt95, 4))
+df_lambda[3,] <- cbind("3H",
+                   round(lambda_opt$p_est_3$qt05, 4),
+                   round(lambda_opt$p_est_3$qt25, 4),
+                   round(lambda_opt$p_est_3$qt50, 4),
+                   round(lambda_opt$p_est_3$qt75, 4),
+                   round(lambda_opt$p_est_3$qt95, 4))
+colnames(df_lambda) <- c("Quantile (in %)","5","25","50","75","95")
+knitr::kable(df_lambda, 
+             caption = "\\label{tab_3_qt_lambda}Optimized values of lambda for the given quantile, 1, 2 and 3 hour predictions.",
+             format.args = kable_format, 
+             row.names = FALSE)
+```
+
+
+
+Update the series...
+
+
+```{r}
+# 1 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_1_qt_05 <- tmp$es
+# residuals
+X$p_res_1_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_05","theta_1_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_1_qt_025 <- tmp$es
+# residuals
+X$p_res_1_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_025","theta_1_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_1_qt_075 <- tmp$es
+# residuals
+X$p_res_1_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_075","theta_1_beta_qt_075")] <- tmp$theta
+# 95
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt95, PI=NULL, tau = 0.95)
+# predictions
+X$p_pred_1_qt_095 <- tmp$es
+# residuals
+X$p_res_1_qt_095 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_095","theta_1_beta_qt_095")] <- tmp$theta
+# 5
+tmp <- ARLS(x=cbind(1, X$p_est_1), lambda=lambda_opt$p_est_1$qt05, PI=NULL, tau = 0.05)
+# predictions
+X$p_pred_1_qt_005 <- tmp$es
+# residuals
+X$p_res_1_qt_005 <- tmp$epsilon
+# theta
+X[,c("theta_1_alpha_qt_005","theta_1_beta_qt_005")] <- tmp$theta
+
+
+# 2 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_2_qt_05 <- tmp$es
+# residuals
+X$p_res_2_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_05","theta_2_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_2_qt_025 <- tmp$es
+# residuals
+X$p_res_2_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_025","theta_2_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_2), lambda=lambda_opt$p_est_2$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_2_qt_075 <- tmp$es
+# residuals
+X$p_res_2_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_2_alpha_qt_075","theta_2_beta_qt_075")] <- tmp$theta
+
+# 3 hour ----
+# 50
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt50, PI=NULL, tau = 0.5)
+# predictions
+X$p_pred_3_qt_05 <- tmp$es
+# residuals
+X$p_res_3_qt_05 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_05","theta_3_beta_qt_05")] <- tmp$theta
+# 25
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt25, PI=NULL, tau = 0.25)
+# predictions
+X$p_pred_3_qt_025 <- tmp$es
+# residuals
+X$p_res_3_qt_025 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_025","theta_3_beta_qt_025")] <- tmp$theta
+# 75
+tmp <- ARLS(x=cbind(1, X$p_est_3), lambda=lambda_opt$p_est_3$qt75, PI=NULL, tau = 0.75)
+# predictions
+X$p_pred_3_qt_075 <- tmp$es
+# residuals
+X$p_res_3_qt_075 <- tmp$epsilon
+# theta
+X[,c("theta_3_alpha_qt_075","theta_3_beta_qt_075")] <- tmp$theta
+```
+
+
+
+```{r fig.cap="\\label{fig_3_5}"}
+X %>%
+  select(t,p,p_pred_1,p_pred_1_qt_05,p_pred_1_qt_025,p_pred_1_qt_075,p_pred_1_qt_005,p_pred_1_qt_095) %>%
+  filter(t > start_per, t < end_per) %>%
+  ggplot(aes(t)) + 
+  geom_ribbon(aes(ymin=(p_pred_1_qt_005), ymax=(p_pred_1_qt_095),fill = "5%-95% QT"), alpha=1) +
+  geom_ribbon(aes(ymin=(p_pred_1_qt_025), ymax=(p_pred_1_qt_075),fill = "25%-75% QT"), alpha=1) +
+  scale_fill_manual("Bands",values=c("#999999","#E69F00")) +
+  geom_line(aes(y=p, color="p"), alpha=1) +
+  geom_line(aes(y=p_pred_1_qt_05, color="50% QT"), alpha=1) +
+  labs(y="p [kW]", x="time date", color="") +
+  theme_TS()
+```
+
+
+\newpage
+
+### Analysis of the residuals
+Figure \ref{fig_3_2_2} illustrates the residuals as function of time for the 1 hour predictions.
+```{r fig.cap="\\label{fig_3_2_2}Residuals as function of time.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_line(aes(x=t, y=p_res_1, color="res_1H"), alpha=1/3) +
+  labs(y="power [kW]", x="date time", color="Residauls") +
+  theme_TS()
+```
+
+\newpage
+
+Figure \ref{fig_3_3_2} illustrates the distribution of the residuals. As ealier there are a negative shift in the residuals.
+```{r fig.cap="\\label{fig_3_3_2}Histogram of the residuals.", message=FALSE, warning=FALSE}
+X %>% 
+  select(t,p,p_pred_1_qt_05) %>%
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+ggplot() +
+  geom_histogram(aes(x=p_res_1, color="res_1H", y=..density..), alpha=1/2) +
+  stat_function(fun=dnorm, args=list(mean=mean(X$p_res_1), sd=sd(X$p_res_1))) +
+  labs(x="epsilon", y="frequency (in %)", color="Residauls") +
+  theme_TS()
+```
+
+
+Figure \ref{fig_3_4_2} shows the cumulated periodogram of the residuals. The qq-plot is quiet similar to figure \ref{fig_2_12} where $\lambda=1$. There are still systematic behavoiur left in the residuals.
+
+```{r, fig.cap="\\label{fig_3_4_2}Cumulated periodogram of the residuals."}
+tmp_p_res_1 <- X %>% 
+  mutate(p_res_1 = p - p_pred_1_qt_05) %>%
+  select(p_res_1)
+# plot ----
+cpgram <- cpgram_func(tmp_p_res_1)
+ggplot() +
+  geom_point(data=cpgram$df, aes(x=x, y=y, color="cpgram"), alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_upper[1],
+                   y=cpgram$confi_upper[3],
+                   xend=cpgram$confi_upper[2],
+                   yend=cpgram$confi_upper[4], colour="95%CI"),
+               alpha=1/2) +
+  geom_segment(aes(x=cpgram$confi_lower[1],
+                   y=cpgram$confi_lower[3],
+                   xend=cpgram$confi_lower[2],
+                   yend=cpgram$confi_lower[4], colour="95%CI"),
+               alpha=1/2) +
+  labs(x="frequency", y="", color="") +
+  theme_TS()
+```
+
+
+\newpage
+
+### Performance of quantiles with fine tuned values of lambda
+table \ref{tab_3_performance_2}
+```{r}
+#
+below_95 <- sum(X$p < X$p_pred_1_qt_095) / n * 100
+below_75 <- sum(X$p < X$p_pred_1_qt_075) / n * 100
+below_25 <- sum(X$p < X$p_pred_1_qt_025) / n * 100
+below_05 <- sum(X$p < X$p_pred_1_qt_005) / n * 100
+#
+above_95 <- sum(X$p > X$p_pred_1_qt_095) / n * 100
+above_75 <- sum(X$p > X$p_pred_1_qt_075) / n * 100
+above_25 <- sum(X$p > X$p_pred_1_qt_025) / n * 100
+above_05 <- sum(X$p > X$p_pred_1_qt_005) / n * 100
+#
+betwe_0595 <- sum((X$p <= X$p_pred_1_qt_095) & (X$p >= X$p_pred_1_qt_005)) / n * 100
+betwe_2575 <- sum((X$p <= X$p_pred_1_qt_075) & (X$p >= X$p_pred_1_qt_025)) / n * 100
+
+df_performance <- cbind(df_performance, 
+                        rbind(below_95,below_75,below_25,below_05,
+                              betwe_0595,betwe_2575,
+                              above_95,above_75,above_25,above_05))
+colnames(df_performance) <- c("Quantile (in %)","AQRLS (in %)","AQRLS FT (in %)")
+knitr::kable(df_performance, 
+             caption = "\\label{tab_3_performance_2}Precentage of the observations that are below, between and above the considered quantile intervals where lambda have been optimized.",
+             format.args = kable_format, 
+             row.names = FALSE)
+```
+
+
+
+
+<!--
+## Describe the correlation in the residuals...
+figure \ref{fig_3_5}
+```{r, fig.cap="\\label{fig_3_5}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+tmp <- X$p_res_1_qt_05[1:100] %*% t(X$p_res_1_qt_05[1:100])
+tmp <- cor(tmp)
+tmp <- setNames(reshape2::melt(tmp), c('x', 'y', 'z'))
+interp2xyz(interp(x=tmp$x, y=tmp$y, z=tmp$z, duplicate="mean"), data.frame=TRUE) %>%
+  filter(!is.na(z)) %>%
+  tbl_df() %>%
+  ggplot(aes(x=x, y=y, z=z, fill=z)) + 
+  geom_tile() + 
+  geom_contour(color="white", alpha=0.5) + 
+  scale_fill_distiller(palette="Spectral", na.value="white", name="Power [kW]") + 
+  #scale_y_discrete(limits=y_ticks, labels=y_ticks_labels) +
+  labs(y="Wind direction [deg]", x="Wind speed [m/s]", color="") +
+  theme_TS()
+```
+-->
+
+
+
+
+
+
+<!--
+## variable forgetting
+```{r, echo=TRUE}
+ARLS_VFF <- function(x, Y=X$p, tau=NULL, PI=NULL) {
+  # create matrices 
+  R <- XX <- matrix(0, nrow=dim(x)[2], ncol=dim(x)[2])
+  Theta <- matrix(0, ncol=1, nrow=dim(x)[2])
+  theta_par <- matrix(NA, nrow=dim(x)[1], ncol=dim(x)[2])
+  estimate <- epsilon <- lambda <- sd <-  rep(NA, dim(x)[1])
+  # apply filter
+  for (t in 1:dim(x)[1]) {
+    # update X
+    diag(XX) <- x[t, ]
+    # make prediction for t | t-1 (for theta)
+    estimate[t] <- diag(XX) %*% Theta
+    # prediction error
+    epsilon[t] <- Y[t] - estimate[t]
+    # estimate of confidence intervals
+    if (!is.null(PI)) { 
+      if (t > dim(x)[2]) {
+        sd2 <- epsilon[t]^2
+        sd[t] <- qt(PI, t - dim(x)[2]) * sqrt(sd2)
+      } else { sd[t] <- NA }
+    }
+    # update lambda
+    if (t != 1) {
+      lambda[t] <- epsilon[t]^2 / (diag((1 + t(XX) %*% solve(R) %*% XX)) %*% Theta)
+    } else {
+      lambda[t] <- 1 
+    }
+    # update theta for t | t
+    R <- XX %*% t(XX) + lambda[t] * R
+    # Theta with or without quantile regression 
+    if (is.null(tau)) { 
+      Theta <- Theta + solve(R) %*% XX %*% (Y[t] - t(XX) %*% Theta) 
+    } else { 
+      Theta <- Theta + solve(R) %*% XX %*% rho(tau=tau, r=(Y[t] - t(XX) %*% Theta))
+      }
+    # trace theta
+    theta_par[t, ] <- Theta
+  }
+  # return
+  return(list("es"=estimate,
+              "sd"=sd,
+              "theta"=as.data.frame(theta_par),
+              "epsilon"=epsilon,
+              "lambda"=lambda))
+}
+```
+
+```{r}
+
+#ARLS_VFF(x = cbind(1, X$p_est_1))
+
+
+
+```
+
+## Describe the correlation in the residuals...
+figure \ref{fig_3_6}
+```{r, fig.cap="\\label{fig_3_6}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+X %>%
+  select(t,p,p_res_1, T1) %>%
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_point(aes(x=T1, y=p, color="p"), alpha=1/3) +
+  #geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="p [kW]", x="temperature [K]", color="") +
+  theme_TS()
+
+cor(X$T1, X$p)
+```
+
+
+figure \ref{fig_3_7}
+```{r, fig.cap="\\label{fig_3_7}Contour plot of the recorded data where NA have been excluded. The power curve is created based upon Ws1 and Wd1."}
+X %>%
+  select(t,p, T1) %>%
+  mutate(t_hour = as.integer(substr(t, 12, 13))) %>%
+  #filter(t > start_per, t < end_per) %>%
+  ggplot() +
+  geom_point(aes(x=t_hour, y=p, color="alpha"), alpha=1/3) +
+  #geom_line(aes(x=t, y=theta_1_beta, color="beta"), alpha=1/3) +
+  labs(y="Value", x="date time", color="Normalized thetas") +
+  theme_TS()
+
+cor(X$toy, X$p)
+```
+
+
+-->
